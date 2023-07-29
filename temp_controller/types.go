@@ -21,7 +21,14 @@ type CurrentTempreture struct {
 	UpdatedAt  time.Time
 }
 
-type AirconAppliance struct {
+type AirconOrderParameters struct {
 	ApplianceId    string
 	AirconSettings signal.AirconSettings
+}
+
+type TempretureMaxMinSettings struct {
+	TooHotThreshold           float64
+	TooColdThreshold          float64
+	MinimumTemperatureSetting float64
+	MaximumTemperatureSetting float64
 }

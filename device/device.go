@@ -14,6 +14,15 @@ var (
 	errLog = log.New(os.Stderr, "[Error] ", 0)
 )
 
+type Temperature struct {
+	Val       float64   `json:"val"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type NewestEvents struct {
+	Te Temperature `json:"te"`
+}
+
 type Device struct {
 	Name              string    `json:"name"`
 	ID                string    `json:"id"`
@@ -30,12 +39,7 @@ type Device struct {
 		Nickname  string `json:"nickname"`
 		Superuser bool   `json:"superuser"`
 	} `json:"users"`
-	NewestEvents struct {
-		Te struct {
-			Val       float64   `json:"val"`
-			CreatedAt time.Time `json:"created_at"`
-		} `json:"te"`
-	} `json:"newest_events"`
+	NewestEvents NewestEvents `json:"newest_events"`
 }
 
 func Get_devices(nature_api_secret string) []Device {

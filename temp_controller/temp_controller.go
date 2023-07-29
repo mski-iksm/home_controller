@@ -16,13 +16,6 @@ var (
 	errLog = log.New(os.Stderr, "[Error] ", 0)
 )
 
-var TOO_HOT_THRESHOLD float64 = 27.5
-var TOO_COLD_THRESHOLD float64 = 24.0
-
-// 設定可能な再下限・最上限
-var MINIMUM_TEMPERATURE_SETTING float64 = 23.0
-var MAXIMUM_TEMPERATURE_SETTING float64 = 30.0
-
 func getCurrentAirconSettings(appliance appliance.Appliance) CurrentAirConSettings {
 	tempreture, err := strconv.ParseFloat(appliance.Settings.Temp, 64)
 	if err != nil {
@@ -60,7 +53,7 @@ func get_current_temperature(device device.Device) CurrentTempreture {
 }
 
 // 新settingを作る
-func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, current_tempreture CurrentTempreture) (NewAirConSettings, error) {
+func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, current_tempreture CurrentTempreture, temptureMaxMinSettings TempretureMaxMinSettings) (NewAirConSettings, error) {
 	var no_error error = nil
 
 	// 電源がオフなら No Change
@@ -72,7 +65,7 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 	}
 
 	// too hot なら温度下げる
-	if current_tempreture.Tempreture >= TOO_HOT_THRESHOLD && current_aircon_setting.AirconSettings.Temperature > MINIMUM_TEMPERATURE_SETTING {
+	if current_tempreture.Tempreture >= temptureMaxMinSettings.TooHotThreshold && current_aircon_setting.AirconSettings.Temperature > temptureMaxMinSettings.MinimumTemperatureSetting {
 		new_aircon_setting := NewAirConSettings{
 			AirconSettings: signal.AirconSettings{
 				OperationMode: current_aircon_setting.AirconSettings.OperationMode,
@@ -86,7 +79,7 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 	}
 
 	// too cold なら温度上げる
-	if current_tempreture.Tempreture <= TOO_COLD_THRESHOLD && current_aircon_setting.AirconSettings.Temperature < MAXIMUM_TEMPERATURE_SETTING {
+	if current_tempreture.Tempreture <= temptureMaxMinSettings.TooColdThreshold && current_aircon_setting.AirconSettings.Temperature < temptureMaxMinSettings.MaximumTemperatureSetting {
 		new_aircon_setting := NewAirConSettings{
 			AirconSettings: signal.AirconSettings{
 				OperationMode: current_aircon_setting.AirconSettings.OperationMode,
@@ -119,13 +112,13 @@ func find_aircon_appliance(appliances []appliance.Appliance) (appliance.Applianc
 	return appliance.Appliance{}, errors.New("No AC found")
 }
 
-func BuildNewAirconAppliance(appliances []appliance.Appliance, device device.Device) (AirconAppliance, error) {
+func BuildNewAirconOrderParameters(appliances []appliance.Appliance, device device.Device, temptureMaxMinSettings TempretureMaxMinSettings) (AirconOrderParameters, error) {
 	// エアコンを探して appliance を返す
 	aircon_appliance, ac_not_found_err := find_aircon_appliance(appliances)
 	if ac_not_found_err != nil {
 		errLog.Printf("エアコンが見つかりませんでした")
 		no_appliance_error := errors.New("No Change")
-		return AirconAppliance{}, no_appliance_error
+		return AirconOrderParameters{}, no_appliance_error
 	}
 
 	// 今の設定を取得
@@ -135,18 +128,18 @@ func BuildNewAirconAppliance(appliances []appliance.Appliance, device device.Dev
 	current_tempreture := get_current_temperature(device)
 
 	// new settingを作る
-	new_aircon_settings, no_settings_change_error := buildNewAirconSettings(current_aircon_setting, current_tempreture)
+	new_aircon_settings, no_settings_change_error := buildNewAirconSettings(current_aircon_setting, current_tempreture, temptureMaxMinSettings)
 	if no_settings_change_error != nil {
 		errLog.Printf("設定変更なし")
-		return AirconAppliance{}, no_settings_change_error
+		return AirconOrderParameters{}, no_settings_change_error
 	}
 
-	// setting から appliance を作る
-	new_aircon_appliance := AirconAppliance{
+	// setting から order_parameter を作る
+	newAirconOrderParameters := AirconOrderParameters{
 		ApplianceId:    aircon_appliance.ID,
 		AirconSettings: new_aircon_settings.AirconSettings,
 	}
-	appLog.Printf("new_aircon_appliance: %v", new_aircon_appliance)
+	appLog.Printf("newAirconOrderParameters: %v", newAirconOrderParameters)
 
-	return new_aircon_appliance, nil
+	return newAirconOrderParameters, nil
 }
