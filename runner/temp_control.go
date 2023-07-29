@@ -7,6 +7,7 @@ import (
 	"home_controller/temp_controller"
 	"log"
 	"os"
+	"time"
 )
 
 var (
@@ -14,7 +15,24 @@ var (
 	errLog = log.New(os.Stderr, "[Error] ", 0)
 )
 
+func getTime() time.Time {
+	nowTime := time.Now().UTC() // 現在時刻をUTCで取得
+
+	// タイムゾーンからJSTを読み込み
+	tokyo, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		errLog.Println(err)
+		os.Exit(1)
+	}
+	timeTokyo := nowTime.In(tokyo)
+	return timeTokyo
+}
+
 func Temp_control(nature_api_secret string, device_name string) {
+	// 時刻を出力
+	currentTime := getTime()
+	appLog.Printf("時刻: %v\n", currentTime)
+
 	// get devices
 	var devices []device.Device = device.Get_devices(nature_api_secret)
 	// get appliances
