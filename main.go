@@ -29,7 +29,7 @@ func init() {
 
 	flag.Float64Var(&tooHotThreshold, "tooHotThreshold", 27.5, "この気温以上になると暑いと判定し、エアコンの設定温度を下げる")
 	flag.Float64Var(&tooColdThreshold, "tooColdThreshold", 24.0, "この気温未満になると暑いと判定し、エアコンの設定温度を上げる")
-	flag.Float64Var(&minimumTemperatureSetting, "minimumTemperatureSetting", 24.0, "エアコンの設定可能温度の下限。安全のためこれ以上下げないようにする。")
+	flag.Float64Var(&minimumTemperatureSetting, "minimumTemperatureSetting", 23.0, "エアコンの設定可能温度の下限。安全のためこれ以上下げないようにする。")
 	flag.Float64Var(&maximumTemperatureSetting, "maximumTemperatureSetting", 30.0, "エアコンの設定可能温度の上限。安全のためこれ以上上げないようにする。")
 }
 
