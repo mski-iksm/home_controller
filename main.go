@@ -13,12 +13,13 @@ var device_name string
 
 // temp_control モードで使用する設定 ==========
 // 暑すぎる・寒すぎる気温の設定
-var tooHotThreshold float64  // = 27.5
-var tooColdThreshold float64 //= 24.0
+var tooHotThreshold float64
+var tooColdThreshold float64
 
 // 設定可能な気温の下限・上限
-var minimumTemperatureSetting float64 //= 23.0
-var maximumTemperatureSetting float64 //= 30.0
+var minimumTemperatureSetting float64
+var maximumTemperatureSetting float64
+
 // =======================================
 
 func init() {
