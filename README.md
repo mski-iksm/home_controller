@@ -1,8 +1,29 @@
-meをチェック
-curl -X GET "https://api.nature.global/1/users/me" -H "accept: application/json" -H "authorization: Bearer ${NATURE_REMO_SECRET}"
+# Home Controller
+[Nature Remo](https://nature.global/nature-remo/)から信号を送るコマンドラインツールです。
 
-nature remo デバイスを一覧
-curl -X GET "https://api.nature.global/1/devices" -H "accept: application/json" -H "authorization: Bearer ${NATURE_REMO_SECRET}" | python -m json.tool --no-ensure-ascii
+send_signalモードとtemp_controlモードの2つのモードがあります。
+- send_signalモード: 選択肢からインタラクティブに操作するモード
+- temp_controlモード: 室温が規定の範囲内になるようにエアコンの設定温度を自動変更するモード
 
-登録電化製品一覧
-curl -X GET "https://api.nature.global/1/appliances" -H "accept: application/json" -H "authorization: Bearer ${NATURE_REMO_SECRET}" | python -m json.tool --no-ensure-ascii
+## 使い方
+### 事前準備
+Nature Remoを設置し、各家電のリモコンを設定します。
+https://shop.nature.global/
+
+Nature RemoのAPIキーを取得します。
+https://home.nature.global/
+
+Nature RemoのAPIキーを環境変数に設定します。
+```bash
+export NATURE_REMO_SECRET="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
+
+### send_signalモード
+```bash
+go run main.go -nature_api_secret=${NATURE_REMO_SECRET} -action_mode="send_signal"
+```
+
+### temp_controlモード
+```bash
+go run main.go -nature_api_secret=${NATURE_REMO_SECRET} -action_mode="temp_control" -device_name="Remo"
+```
