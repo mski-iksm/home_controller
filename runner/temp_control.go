@@ -28,7 +28,7 @@ func getTime() time.Time {
 	return timeTokyo
 }
 
-func Temp_control(nature_api_secret string, device_name string) {
+func TempControl(nature_api_secret string, device_name string, temptureMaxMinSettings temp_controller.TempretureMaxMinSettings) {
 	// 時刻を出力
 	currentTime := getTime()
 	appLog.Printf("時刻: %v\n", currentTime)
@@ -48,14 +48,14 @@ func Temp_control(nature_api_secret string, device_name string) {
 	// filter appliances
 	filtered_appliances := appliance.FilterAppliances(appliances, device_name)
 
-	new_aircon_appliance, no_change_err := temp_controller.BuildNewAirconAppliance(filtered_appliances, selected_device)
+	newAirconOrderParameters, no_change_err := temp_controller.BuildNewAirconOrderParameters(filtered_appliances, selected_device, temptureMaxMinSettings)
 
 	if no_change_err != nil {
 		errLog.Println(no_change_err)
 		return
 	}
 
-	signal.PostAirconSignal(nature_api_secret, new_aircon_appliance.ApplianceId, new_aircon_appliance.AirconSettings)
+	signal.PostAirconSignal(nature_api_secret, newAirconOrderParameters.ApplianceId, newAirconOrderParameters.AirconSettings)
 
 	// slackを送る
 }

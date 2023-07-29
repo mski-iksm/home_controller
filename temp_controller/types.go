@@ -1,7 +1,9 @@
 package temp_controller
 
 import (
+	"fmt"
 	"home_controller/signal"
+	"os"
 	"time"
 )
 
@@ -21,7 +23,50 @@ type CurrentTempreture struct {
 	UpdatedAt  time.Time
 }
 
-type AirconAppliance struct {
+type AirconOrderParameters struct {
 	ApplianceId    string
 	AirconSettings signal.AirconSettings
+}
+
+type TempretureMaxMinSettings struct {
+	TooHotThreshold           float64
+	TooColdThreshold          float64
+	MinimumTemperatureSetting float64
+	MaximumTemperatureSetting float64
+}
+
+var TOO_HOT_THRESHOLD_HARD_LIMIT float64 = 29.0
+var TOO_COLD_THRESHOLD_HARD_LIMIT float64 = 22.0
+var MINIMUM_TEMPERATURE_SETTING_HARD_LIMIT float64 = 22.0
+var MAXIMUM_TEMPERATURE_SETTING_HARD_LIMIT float64 = 30.0
+
+func assertTresholdSettings(tempretureMaxMinSettings TempretureMaxMinSettings) error {
+	if tempretureMaxMinSettings.TooHotThreshold > TOO_HOT_THRESHOLD_HARD_LIMIT {
+		return fmt.Errorf("tooHotThresholdが閾値を超えています。閾値: %v, tooHotThreshold: %v\n", TOO_HOT_THRESHOLD_HARD_LIMIT, tempretureMaxMinSettings.TooHotThreshold)
+	}
+	if tempretureMaxMinSettings.TooColdThreshold < TOO_COLD_THRESHOLD_HARD_LIMIT {
+		return fmt.Errorf("tooColdThresholdが閾値を超えています。閾値: %v, tooColdThreshold: %v\n", TOO_COLD_THRESHOLD_HARD_LIMIT, tempretureMaxMinSettings.TooColdThreshold)
+	}
+	if tempretureMaxMinSettings.MinimumTemperatureSetting < MINIMUM_TEMPERATURE_SETTING_HARD_LIMIT {
+		return fmt.Errorf("minimumTemperatureSettingが閾値を超えています。閾値: %v, minimumTemperatureSetting: %v\n", MINIMUM_TEMPERATURE_SETTING_HARD_LIMIT, tempretureMaxMinSettings.MinimumTemperatureSetting)
+	}
+	if tempretureMaxMinSettings.MaximumTemperatureSetting > MAXIMUM_TEMPERATURE_SETTING_HARD_LIMIT {
+		return fmt.Errorf("maximumTemperatureSettingが閾値を超えています。閾値: %v, maximumTemperatureSetting: %v\n", MAXIMUM_TEMPERATURE_SETTING_HARD_LIMIT, tempretureMaxMinSettings.MaximumTemperatureSetting)
+	}
+	return nil
+}
+
+func ConstructTempretureMaxMinSettings(tooHotThreshold float64, tooColdThreshold float64, minimumTemperatureSetting float64, maximumTemperatureSetting float64) *TempretureMaxMinSettings {
+	tempretureMaxMinSettings := TempretureMaxMinSettings{
+		TooHotThreshold:           tooHotThreshold,
+		TooColdThreshold:          tooColdThreshold,
+		MinimumTemperatureSetting: minimumTemperatureSetting,
+		MaximumTemperatureSetting: maximumTemperatureSetting,
+	}
+	hardLimitAssertionError := assertTresholdSettings(tempretureMaxMinSettings)
+	if hardLimitAssertionError != nil {
+		errLog.Println(hardLimitAssertionError)
+		os.Exit(1)
+	}
+	return &tempretureMaxMinSettings
 }
