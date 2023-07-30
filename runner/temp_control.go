@@ -1,9 +1,11 @@
 package runner
 
 import (
+	"fmt"
 	"home_controller/appliance"
 	"home_controller/device"
 	"home_controller/signal"
+	"home_controller/slack"
 	"home_controller/temp_controller"
 	"log"
 	"os"
@@ -28,7 +30,7 @@ func getTime() time.Time {
 	return timeTokyo
 }
 
-func TempControl(nature_api_secret string, device_name string, temptureMaxMinSettings temp_controller.TempretureMaxMinSettings) {
+func TempControl(nature_api_secret string, device_name string, temptureMaxMinSettings temp_controller.TempretureMaxMinSettings, slackObject slack.SlackObject) {
 	// 時刻を出力
 	currentTime := getTime()
 	appLog.Printf("時刻: %v\n", currentTime)
@@ -58,4 +60,6 @@ func TempControl(nature_api_secret string, device_name string, temptureMaxMinSet
 	signal.PostAirconSignal(nature_api_secret, newAirconOrderParameters.ApplianceId, newAirconOrderParameters.AirconSettings)
 
 	// slackを送る
+	slackMessage := fmt.Sprintf("エアコンの設定を変更しました。\n設定温度: %v\nモード: %v\n風量: %v\n風向: %v\n", newAirconOrderParameters.AirconSettings.Temperature, newAirconOrderParameters.AirconSettings.OperationMode, newAirconOrderParameters.AirconSettings.AirVolume, newAirconOrderParameters.AirconSettings.AirDirection)
+	slackObject.SendSlack(slackMessage)
 }
