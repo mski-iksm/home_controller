@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	"home_controller/runner"
+	"home_controller/slack"
 	"home_controller/temp_controller"
 )
 
@@ -25,6 +26,12 @@ var maximumTemperatureSetting float64
 
 // =======================================
 
+// slack設定 ==============
+var slackToken string
+var slackChannel string
+
+// =======================
+
 func init() {
 	flag.StringVar(&nature_api_secret, "nature_api_secret", "", "nature remoのAPI")
 
@@ -36,10 +43,19 @@ func init() {
 	flag.Float64Var(&preparationThreshold, "preparationThreshold", 0.0, "暑すぎる・寒すぎる気温になる前に、エアコンの設定温度を変更する機能。0.0にすると機能しない")
 	flag.Float64Var(&minimumTemperatureSetting, "minimumTemperatureSetting", 23.0, "エアコンの設定可能温度の下限。安全のためこれ以上下げないようにする。")
 	flag.Float64Var(&maximumTemperatureSetting, "maximumTemperatureSetting", 30.0, "エアコンの設定可能温度の上限。安全のためこれ以上上げないようにする。")
+
+	flag.StringVar(&slackToken, "slackToken", "", "slackのtoken")
+	flag.StringVar(&slackChannel, "slackChannel", "", "通知を送信するslackのチャンネル名。#から始める。")
 }
 
 func main() {
 	flag.Parse()
+
+	slackObject := slack.SlackObject{
+		SlackToken:   slackToken,
+		SlackChannel: slackChannel,
+	}
+
 	if action_mode == "send_signal" {
 		runner.Send_signal(nature_api_secret)
 		return
