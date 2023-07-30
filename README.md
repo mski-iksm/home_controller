@@ -25,5 +25,5 @@ go run main.go -nature_api_secret=${NATURE_REMO_SECRET} -action_mode="send_signa
 
 ### temp_controlモード
 ```bash
-go run main.go -nature_api_secret=${NATURE_REMO_SECRET} -action_mode="temp_control" -device_name="Remo"
+go run main.go -nature_api_secret=${NATURE_REMO_SECRET} -action_mode="temp_control" -device_name="Remo" -tooHotThreshold=27.5 -tooColdThreshold=24.5 -preparationThreshold=0.5 -minimumTemperatureSetting=22.0 -maximumTemperatureSetting=30.0 -slackToken="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" -slackChannel="#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
