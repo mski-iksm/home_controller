@@ -31,12 +31,14 @@ type AirconOrderParameters struct {
 type TempretureMaxMinSettings struct {
 	TooHotThreshold           float64
 	TooColdThreshold          float64
+	PreparationThreshold      float64
 	MinimumTemperatureSetting float64
 	MaximumTemperatureSetting float64
 }
 
 var TOO_HOT_THRESHOLD_HARD_LIMIT float64 = 29.0
 var TOO_COLD_THRESHOLD_HARD_LIMIT float64 = 22.0
+var PREPARATION_THRESHOLD_HARD_LIMIT float64 = 0.0
 var MINIMUM_TEMPERATURE_SETTING_HARD_LIMIT float64 = 22.0
 var MAXIMUM_TEMPERATURE_SETTING_HARD_LIMIT float64 = 30.0
 
@@ -47,6 +49,9 @@ func assertTresholdSettings(tempretureMaxMinSettings TempretureMaxMinSettings) e
 	if tempretureMaxMinSettings.TooColdThreshold < TOO_COLD_THRESHOLD_HARD_LIMIT {
 		return fmt.Errorf("tooColdThresholdが閾値を超えています。閾値: %v, tooColdThreshold: %v\n", TOO_COLD_THRESHOLD_HARD_LIMIT, tempretureMaxMinSettings.TooColdThreshold)
 	}
+	if tempretureMaxMinSettings.PreparationThreshold < PREPARATION_THRESHOLD_HARD_LIMIT {
+		return fmt.Errorf("preparationThresholdが閾値を下回っています。閾値: %v, preparationThreshold: %v\n", PREPARATION_THRESHOLD_HARD_LIMIT, tempretureMaxMinSettings.PreparationThreshold)
+	}
 	if tempretureMaxMinSettings.MinimumTemperatureSetting < MINIMUM_TEMPERATURE_SETTING_HARD_LIMIT {
 		return fmt.Errorf("minimumTemperatureSettingが閾値を超えています。閾値: %v, minimumTemperatureSetting: %v\n", MINIMUM_TEMPERATURE_SETTING_HARD_LIMIT, tempretureMaxMinSettings.MinimumTemperatureSetting)
 	}
@@ -56,10 +61,11 @@ func assertTresholdSettings(tempretureMaxMinSettings TempretureMaxMinSettings) e
 	return nil
 }
 
-func ConstructTempretureMaxMinSettings(tooHotThreshold float64, tooColdThreshold float64, minimumTemperatureSetting float64, maximumTemperatureSetting float64) *TempretureMaxMinSettings {
+func ConstructTempretureMaxMinSettings(tooHotThreshold float64, tooColdThreshold float64, preparationThreshold float64, minimumTemperatureSetting float64, maximumTemperatureSetting float64) *TempretureMaxMinSettings {
 	tempretureMaxMinSettings := TempretureMaxMinSettings{
 		TooHotThreshold:           tooHotThreshold,
 		TooColdThreshold:          tooColdThreshold,
+		PreparationThreshold:      preparationThreshold,
 		MinimumTemperatureSetting: minimumTemperatureSetting,
 		MaximumTemperatureSetting: maximumTemperatureSetting,
 	}
