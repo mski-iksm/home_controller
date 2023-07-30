@@ -8,6 +8,7 @@ func TestConstructTempretureMaxMinSettings(t *testing.T) {
 	type Args struct {
 		tooHotThreshold           float64
 		tooColdThreshold          float64
+		preparationThreshold      float64
 		minimumTemperatureSetting float64
 		maximumTemperatureSetting float64
 	}
@@ -22,12 +23,14 @@ func TestConstructTempretureMaxMinSettings(t *testing.T) {
 			args: Args{
 				tooHotThreshold:           29.0,
 				tooColdThreshold:          22.0,
+				preparationThreshold:      0.0,
 				minimumTemperatureSetting: 22.0,
 				maximumTemperatureSetting: 30.0,
 			},
 			want: &TempretureMaxMinSettings{
 				TooHotThreshold:           29.0,
 				TooColdThreshold:          22.0,
+				PreparationThreshold:      0.0,
 				MinimumTemperatureSetting: 22.0,
 				MaximumTemperatureSetting: 30.0,
 			},
@@ -36,7 +39,7 @@ func TestConstructTempretureMaxMinSettings(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ConstructTempretureMaxMinSettings(tt.args.tooHotThreshold, tt.args.tooColdThreshold, tt.args.minimumTemperatureSetting, tt.args.maximumTemperatureSetting)
+			got := ConstructTempretureMaxMinSettings(tt.args.tooHotThreshold, tt.args.tooColdThreshold, tt.args.preparationThreshold, tt.args.minimumTemperatureSetting, tt.args.maximumTemperatureSetting)
 			if (*got).MaximumTemperatureSetting != tt.want.MaximumTemperatureSetting {
 				t.Errorf("MaximumTemperatureSetting mismatch. Must be %v, got %v\n", tt.want, got)
 			}

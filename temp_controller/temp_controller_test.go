@@ -15,6 +15,7 @@ func TestBuildNewAirconSettings(t *testing.T) {
 		current_tempreture     CurrentTempreture
 	}
 
+	tokyoTZ, _ := time.LoadLocation("Asia/Tokyo")
 	tests := []struct {
 		name    string
 		args    Args
@@ -31,12 +32,12 @@ func TestBuildNewAirconSettings(t *testing.T) {
 						AirVolume:     "auto",
 						AirDirection:  "auto",
 					},
-					UpdatedAt: time.Now(),
+					UpdatedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, tokyoTZ),
 					PowerOn:   true,
 				},
 				current_tempreture: CurrentTempreture{
 					Tempreture: 30.0,
-					UpdatedAt:  time.Now(),
+					UpdatedAt:  time.Date(2020, 1, 1, 5, 0, 0, 0, tokyoTZ),
 				},
 			},
 			want: NewAirConSettings{
@@ -60,12 +61,12 @@ func TestBuildNewAirconSettings(t *testing.T) {
 						AirVolume:     "auto",
 						AirDirection:  "auto",
 					},
-					UpdatedAt: time.Now(),
+					UpdatedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, tokyoTZ),
 					PowerOn:   true,
 				},
 				current_tempreture: CurrentTempreture{
 					Tempreture: 23.0,
-					UpdatedAt:  time.Now(),
+					UpdatedAt:  time.Date(2020, 1, 1, 5, 0, 0, 0, tokyoTZ),
 				},
 			},
 			want: NewAirConSettings{
@@ -89,12 +90,12 @@ func TestBuildNewAirconSettings(t *testing.T) {
 						AirVolume:     "auto",
 						AirDirection:  "auto",
 					},
-					UpdatedAt: time.Now(),
+					UpdatedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, tokyoTZ),
 					PowerOn:   true,
 				},
 				current_tempreture: CurrentTempreture{
 					Tempreture: 23.0,
-					UpdatedAt:  time.Now(),
+					UpdatedAt:  time.Date(2020, 1, 1, 5, 0, 0, 0, tokyoTZ),
 				},
 			},
 			want: NewAirConSettings{
@@ -118,12 +119,12 @@ func TestBuildNewAirconSettings(t *testing.T) {
 						AirVolume:     "auto",
 						AirDirection:  "auto",
 					},
-					UpdatedAt: time.Now(),
+					UpdatedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, tokyoTZ),
 					PowerOn:   true,
 				},
 				current_tempreture: CurrentTempreture{
 					Tempreture: 28.0,
-					UpdatedAt:  time.Now(),
+					UpdatedAt:  time.Date(2020, 1, 1, 5, 0, 0, 0, tokyoTZ),
 				},
 			},
 			want: NewAirConSettings{
@@ -147,12 +148,12 @@ func TestBuildNewAirconSettings(t *testing.T) {
 						AirVolume:     "auto",
 						AirDirection:  "auto",
 					},
-					UpdatedAt: time.Now(),
+					UpdatedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, tokyoTZ),
 					PowerOn:   false,
 				},
 				current_tempreture: CurrentTempreture{
 					Tempreture: 29.0,
-					UpdatedAt:  time.Now(),
+					UpdatedAt:  time.Date(2020, 1, 1, 5, 0, 0, 0, tokyoTZ),
 				},
 			},
 			want: NewAirConSettings{
@@ -166,11 +167,133 @@ func TestBuildNewAirconSettings(t *testing.T) {
 			},
 			wantErr: errors.New("No Change"),
 		},
+		{
+			name: "closeToTooCold",
+			args: Args{
+				current_aircon_setting: CurrentAirConSettings{
+					AirconSettings: signal.AirconSettings{
+						OperationMode: "cool",
+						Temperature:   27.0,
+						AirVolume:     "auto",
+						AirDirection:  "auto",
+					},
+					UpdatedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+					PowerOn:   true,
+				},
+				current_tempreture: CurrentTempreture{
+					Tempreture: 24.2,
+					UpdatedAt:  time.Date(2020, 1, 1, 2, 0, 0, 0, time.UTC),
+				},
+			},
+			want: NewAirConSettings{
+				AirconSettings: signal.AirconSettings{
+					OperationMode: "cool",
+					Temperature:   28.0,
+					AirVolume:     "auto",
+					AirDirection:  "auto",
+				},
+				PowerOn: true,
+			},
+			wantErr: nil,
+		},
+		{
+			name: "closeToTooColdButNoChange",
+			args: Args{
+				current_aircon_setting: CurrentAirConSettings{
+					AirconSettings: signal.AirconSettings{
+						OperationMode: "cool",
+						Temperature:   27.0,
+						AirVolume:     "auto",
+						AirDirection:  "auto",
+					},
+					UpdatedAt: time.Now().Add(-3 * time.Minute),
+					// 現在時刻から53分前だと変更されない
+					PowerOn: true,
+				},
+				current_tempreture: CurrentTempreture{
+					Tempreture: 24.2,
+					UpdatedAt:  time.Now().Add(40 * time.Hour),
+					// 測定時刻は前回の設定変更よりも十分先にセット
+				},
+			},
+			want: NewAirConSettings{
+				AirconSettings: signal.AirconSettings{
+					OperationMode: "cool",
+					Temperature:   27.0,
+					AirVolume:     "auto",
+					AirDirection:  "auto",
+				},
+				PowerOn: true,
+			},
+			wantErr: errors.New("No Change"),
+		},
+		{
+			name: "noChangeBecauseTempretureMeasurementIsLessThen10MinutesFromLastChange",
+			args: Args{
+				current_aircon_setting: CurrentAirConSettings{
+					AirconSettings: signal.AirconSettings{
+						OperationMode: "cool",
+						Temperature:   27.0,
+						AirVolume:     "auto",
+						AirDirection:  "auto",
+					},
+					UpdatedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, tokyoTZ),
+					PowerOn:   true,
+				},
+				current_tempreture: CurrentTempreture{
+					Tempreture: 23.0,
+					UpdatedAt:  time.Date(2020, 1, 1, 0, 5, 0, 0, tokyoTZ),
+					// 5分後
+				},
+			},
+			want: NewAirConSettings{
+				AirconSettings: signal.AirconSettings{
+					OperationMode: "cool",
+					Temperature:   27.0,
+					AirVolume:     "auto",
+					AirDirection:  "auto",
+				},
+				PowerOn: true,
+			},
+			wantErr: errors.New("No Change"),
+		},
+		{
+			name: "noChangeBecauseIsLessThen20MinutesFromLastChange",
+			args: Args{
+				current_aircon_setting: CurrentAirConSettings{
+					AirconSettings: signal.AirconSettings{
+						OperationMode: "cool",
+						Temperature:   27.0,
+						AirVolume:     "auto",
+						AirDirection:  "auto",
+					},
+					UpdatedAt: time.Now().Add(-15 * time.Minute),
+					// 現在より15分前だと変更されない
+					PowerOn: true,
+				},
+				current_tempreture: CurrentTempreture{
+					Tempreture: 23.0,
+					UpdatedAt:  time.Now().Add(40 * time.Hour),
+					// 測定時刻は前回の設定変更よりも十分先にセット
+				},
+			},
+			want: NewAirConSettings{
+				AirconSettings: signal.AirconSettings{
+					OperationMode: "cool",
+					Temperature:   27.0,
+					AirVolume:     "auto",
+					AirDirection:  "auto",
+				},
+				PowerOn: true,
+			},
+			wantErr: errors.New("No Change"),
+		},
 	}
 
 	temptureMaxMinSettings := TempretureMaxMinSettings{
 		TooHotThreshold:           27.5,
 		TooColdThreshold:          24.0,
+		PreparationThreshold:      0.5,
 		MinimumTemperatureSetting: 23.0,
 		MaximumTemperatureSetting: 30.0,
 	}
@@ -194,6 +317,7 @@ func TestBuildNewAirconOrderParameters(t *testing.T) {
 		device                 device.Device
 		temptureMaxMinSettings TempretureMaxMinSettings
 	}
+	tokyoTZ, _ := time.LoadLocation("Asia/Tokyo")
 
 	tests := []struct {
 		name    string
@@ -213,7 +337,7 @@ func TestBuildNewAirconOrderParameters(t *testing.T) {
 							Vol:       "auto",
 							Dir:       "auto",
 							Button:    "",
-							UpdatedAt: time.Now(),
+							UpdatedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, tokyoTZ),
 						},
 						ID: "1",
 					},
@@ -222,7 +346,7 @@ func TestBuildNewAirconOrderParameters(t *testing.T) {
 					NewestEvents: device.NewestEvents{
 						Te: device.Temperature{
 							Val:       29.0,
-							CreatedAt: time.Now(),
+							CreatedAt: time.Date(2020, 1, 1, 5, 0, 0, 0, tokyoTZ),
 						},
 					},
 				},
@@ -254,6 +378,45 @@ func TestBuildNewAirconOrderParameters(t *testing.T) {
 			}
 			if (err == nil) != (tt.wantErr == nil) {
 				t.Errorf("BuildNewAirconOrderParameters error mismatch. Must be %v, got %v\n", tt.wantErr, err)
+			}
+		})
+	}
+}
+
+func TestConvertUTCToJST(t *testing.T) {
+	tokyo, _ := time.LoadLocation("Asia/Tokyo")
+	tests := []struct {
+		name    string
+		utcTime time.Time
+		want    time.Time
+	}{
+		{
+			name:    "confirmPass",
+			utcTime: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+			want:    time.Date(2020, 1, 1, 9, 0, 0, 0, tokyo),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ConvertUTCToJST(tt.utcTime)
+			if got.Year() != tt.want.Year() {
+				t.Errorf("ConvertUTCToJST Year mismatch. Must be %v, got %v\n", tt.want, got)
+			}
+			if got.Month() != tt.want.Month() {
+				t.Errorf("ConvertUTCToJST Month mismatch. Must be %v, got %v\n", tt.want, got)
+			}
+			if got.Day() != tt.want.Day() {
+				t.Errorf("ConvertUTCToJST Day mismatch. Must be %v, got %v\n", tt.want, got)
+			}
+			if got.Hour() != tt.want.Hour() {
+				t.Errorf("ConvertUTCToJST Hour mismatch. Must be %v, got %v\n", tt.want, got)
+			}
+			if got.Minute() != tt.want.Minute() {
+				t.Errorf("ConvertUTCToJST Minute mismatch. Must be %v, got %v\n", tt.want, got)
+			}
+			if got.Second() != tt.want.Second() {
+				t.Errorf("ConvertUTCToJST Second mismatch. Must be %v, got %v\n", tt.want, got)
 			}
 		})
 	}

@@ -9,12 +9,24 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 )
 
 var (
 	appLog = log.New(os.Stderr, "", 0)
 	errLog = log.New(os.Stderr, "[Error] ", 0)
 )
+
+func ConvertUTCToJST(utcTime time.Time) time.Time {
+	// タイムゾーンからJSTを読み込み
+	tokyo, err := time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		errLog.Println(err)
+		os.Exit(1)
+	}
+	timeTokyo := utcTime.In(tokyo)
+	return timeTokyo
+}
 
 func getCurrentAirconSettings(appliance appliance.Appliance) CurrentAirConSettings {
 	tempreture, err := strconv.ParseFloat(appliance.Settings.Temp, 64)
@@ -29,7 +41,7 @@ func getCurrentAirconSettings(appliance appliance.Appliance) CurrentAirConSettin
 			AirVolume:     appliance.Settings.Vol,
 			AirDirection:  appliance.Settings.Dir,
 		},
-		UpdatedAt: appliance.Settings.UpdatedAt,
+		UpdatedAt: ConvertUTCToJST(appliance.Settings.UpdatedAt),
 		PowerOn:   len(appliance.Settings.Button) == 0,
 	}
 
@@ -43,7 +55,7 @@ func getCurrentAirconSettings(appliance appliance.Appliance) CurrentAirConSettin
 func get_current_temperature(device device.Device) CurrentTempreture {
 	current_tempreture := CurrentTempreture{
 		Tempreture: device.NewestEvents.Te.Val,
-		UpdatedAt:  device.NewestEvents.Te.CreatedAt,
+		UpdatedAt:  ConvertUTCToJST(device.NewestEvents.Te.CreatedAt),
 	}
 
 	appLog.Printf("現在温度: %v\n", current_tempreture.Tempreture)
@@ -55,12 +67,29 @@ func get_current_temperature(device device.Device) CurrentTempreture {
 // 新settingを作る
 func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, current_tempreture CurrentTempreture, temptureMaxMinSettings TempretureMaxMinSettings) (NewAirConSettings, error) {
 	var no_error error = nil
+	currentTimeJST := ConvertUTCToJST(time.Now())
 
 	// 電源がオフなら No Change
 	if !current_aircon_setting.PowerOn {
 		return NewAirConSettings{
 			AirconSettings: current_aircon_setting.AirconSettings,
 			PowerOn:        false,
+		}, errors.New("No Change")
+	}
+
+	// 気温を測定した時刻が前回の変更から10分以内なら No Change
+	if current_tempreture.UpdatedAt.Sub(current_aircon_setting.UpdatedAt).Minutes() < 10.0 {
+		return NewAirConSettings{
+			AirconSettings: current_aircon_setting.AirconSettings,
+			PowerOn:        true,
+		}, errors.New("No Change")
+	}
+
+	// 前回変更から20分以内なら No Change
+	if currentTimeJST.Sub(current_aircon_setting.UpdatedAt).Minutes() < 20.0 {
+		return NewAirConSettings{
+			AirconSettings: current_aircon_setting.AirconSettings,
+			PowerOn:        true,
 		}, errors.New("No Change")
 	}
 
@@ -92,7 +121,39 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 		return new_aircon_setting, no_error
 	}
 
-	// 気温がOK範囲の場合、setting is too high をチェック -> 一旦不要
+	// too hot に近づき、かつ1時間以上設定変更されていなければ温度下げる
+	if current_tempreture.Tempreture >= temptureMaxMinSettings.TooHotThreshold-temptureMaxMinSettings.PreparationThreshold && current_aircon_setting.AirconSettings.Temperature > temptureMaxMinSettings.MinimumTemperatureSetting {
+		time_diff := currentTimeJST.Sub(current_aircon_setting.UpdatedAt)
+		if time_diff.Minutes() > 58.0 {
+			new_aircon_setting := NewAirConSettings{
+				AirconSettings: signal.AirconSettings{
+					OperationMode: current_aircon_setting.AirconSettings.OperationMode,
+					Temperature:   current_aircon_setting.AirconSettings.Temperature - 1.0,
+					AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
+					AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
+				},
+				PowerOn: true,
+			}
+			return new_aircon_setting, no_error
+		}
+	}
+
+	// too cold に近づき、かつ1時間以上設定変更されていなければ温度上げる
+	if current_tempreture.Tempreture <= temptureMaxMinSettings.TooColdThreshold+temptureMaxMinSettings.PreparationThreshold && current_aircon_setting.AirconSettings.Temperature < temptureMaxMinSettings.MaximumTemperatureSetting {
+		time_diff := currentTimeJST.Sub(current_aircon_setting.UpdatedAt)
+		if time_diff.Minutes() > 58.0 {
+			new_aircon_setting := NewAirConSettings{
+				AirconSettings: signal.AirconSettings{
+					OperationMode: current_aircon_setting.AirconSettings.OperationMode,
+					Temperature:   current_aircon_setting.AirconSettings.Temperature + 1.0,
+					AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
+					AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
+				},
+				PowerOn: true,
+			}
+			return new_aircon_setting, no_error
+		}
+	}
 
 	// 特に問題なしなら 現状のまま を返す
 	return NewAirConSettings{
