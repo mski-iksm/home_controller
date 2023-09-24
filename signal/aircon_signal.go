@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"home_controller/appliance"
+	"github.com/mski-iksm/home_controller/appliance"
 )
 
 type AirconSettings struct {

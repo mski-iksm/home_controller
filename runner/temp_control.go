@@ -2,14 +2,15 @@ package runner
 
 import (
 	"fmt"
-	"home_controller/appliance"
-	"home_controller/device"
-	"home_controller/signal"
-	"home_controller/slack"
-	"home_controller/temp_controller"
 	"log"
 	"os"
 	"time"
+
+	"github.com/mski-iksm/home_controller/appliance"
+	"github.com/mski-iksm/home_controller/device"
+	"github.com/mski-iksm/home_controller/signal"
+	"github.com/mski-iksm/home_controller/slack"
+	"github.com/mski-iksm/home_controller/temp_controller"
 )
 
 var (

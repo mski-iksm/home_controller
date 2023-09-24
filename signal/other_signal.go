@@ -7,7 +7,7 @@ import (
 	"os"
 	"strconv"
 
-	"home_controller/appliance"
+	"github.com/mski-iksm/home_controller/appliance"
 )
 
 func select_other_signal(appliance appliance.Appliance) string {
