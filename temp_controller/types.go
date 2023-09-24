@@ -2,9 +2,10 @@ package temp_controller
 
 import (
 	"fmt"
-	"home_controller/signal"
 	"os"
 	"time"
+
+	"github.com/mski-iksm/home_controller/signal"
 )
 
 type CurrentAirConSettings struct {

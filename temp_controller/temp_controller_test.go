@@ -2,11 +2,12 @@ package temp_controller
 
 import (
 	"errors"
-	"home_controller/appliance"
-	"home_controller/device"
-	"home_controller/signal"
 	"testing"
 	"time"
+
+	"github.com/mski-iksm/home_controller/appliance"
+	"github.com/mski-iksm/home_controller/device"
+	"github.com/mski-iksm/home_controller/signal"
 )
 
 func TestBuildNewAirconSettings(t *testing.T) {

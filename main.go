@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 
-	"home_controller/runner"
-	"home_controller/slack"
-	"home_controller/temp_controller"
+	"github.com/mski-iksm/home_controller/runner"
+	"github.com/mski-iksm/home_controller/slack"
+	"github.com/mski-iksm/home_controller/temp_controller"
 )
 
 var nature_api_secret string

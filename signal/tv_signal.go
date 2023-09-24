@@ -7,7 +7,7 @@ import (
 	"os"
 	"strconv"
 
-	"home_controller/appliance"
+	"github.com/mski-iksm/home_controller/appliance"
 )
 
 func select_tv_button(appliance appliance.Appliance) string {

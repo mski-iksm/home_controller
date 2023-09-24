@@ -1,8 +1,8 @@
 package runner
 
 import (
-	"home_controller/appliance"
-	"home_controller/signal"
+	"github.com/mski-iksm/home_controller/appliance"
+	"github.com/mski-iksm/home_controller/signal"
 )
 
 func Send_signal(nature_api_secret string) {

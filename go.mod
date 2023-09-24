@@ -1,4 +1,4 @@
-module home_controller
+module github.com/mski-iksm/home_controller
 
 go 1.19
 

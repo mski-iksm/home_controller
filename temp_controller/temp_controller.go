@@ -3,13 +3,14 @@ package temp_controller
 import (
 	"errors"
 	"fmt"
-	"home_controller/appliance"
-	"home_controller/device"
-	"home_controller/signal"
 	"log"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/mski-iksm/home_controller/appliance"
+	"github.com/mski-iksm/home_controller/device"
+	"github.com/mski-iksm/home_controller/signal"
 )
 
 var (
