@@ -36,10 +36,10 @@ type TempretureMaxMinSettings struct {
 	MaximumTemperatureSetting float64
 }
 
-var TOO_HOT_THRESHOLD_HARD_LIMIT float64 = 29.0
-var TOO_COLD_THRESHOLD_HARD_LIMIT float64 = 22.0
+var TOO_HOT_THRESHOLD_HARD_LIMIT float64 = 30.0
+var TOO_COLD_THRESHOLD_HARD_LIMIT float64 = 12.0
 var PREPARATION_THRESHOLD_HARD_LIMIT float64 = 0.0
-var MINIMUM_TEMPERATURE_SETTING_HARD_LIMIT float64 = 22.0
+var MINIMUM_TEMPERATURE_SETTING_HARD_LIMIT float64 = 12.0
 var MAXIMUM_TEMPERATURE_SETTING_HARD_LIMIT float64 = 30.0
 
 func assertTresholdSettings(tempretureMaxMinSettings TempretureMaxMinSettings) error {

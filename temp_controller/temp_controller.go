@@ -42,7 +42,8 @@ func getCurrentAirconSettings(appliance appliance.Appliance) CurrentAirConSettin
 			AirDirection:  appliance.Settings.Dir,
 		},
 		UpdatedAt: ConvertUTCToJST(appliance.Settings.UpdatedAt),
-		PowerOn:   len(appliance.Settings.Button) == 0,
+		PowerOn:   len(appliance.Settings.Button) == 0 || appliance.Settings.Button == "power-on",
+		// 空 もしくは power-on なら電源オン
 	}
 
 	appLog.Printf("設定温度: %v\n", current_aircon_settings.AirconSettings.Temperature)
