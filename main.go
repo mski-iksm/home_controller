@@ -35,7 +35,7 @@ var slackChannel string
 func init() {
 	flag.StringVar(&nature_api_secret, "nature_api_secret", "", "nature remoのAPI")
 
-	flag.StringVar(&action_mode, "action_mode", "send_signal", "send_signal or temp_control")
+	flag.StringVar(&action_mode, "action_mode", "send_signal", "send_signal or notify or temp_control")
 	flag.StringVar(&device_name, "device_name", "Remo mini", "device name")
 
 	flag.Float64Var(&tooHotThreshold, "tooHotThreshold", 27.5, "この気温以上になると暑いと判定し、エアコンの設定温度を下げる")
@@ -59,6 +59,12 @@ func main() {
 	if action_mode == "send_signal" {
 		runner.Send_signal(nature_api_secret)
 		return
+	}
+	if action_mode == "notify_temp" {
+		temptureMaxMinSettings := temp_controller.ConstructTempretureMaxMinSettings(tooHotThreshold, tooColdThreshold, preparationThreshold, minimumTemperatureSetting, maximumTemperatureSetting)
+		runner.Notify(nature_api_secret, device_name, *temptureMaxMinSettings, slackObject)
+		return
+
 	}
 	if action_mode == "temp_control" {
 		temptureMaxMinSettings := temp_controller.ConstructTempretureMaxMinSettings(tooHotThreshold, tooColdThreshold, preparationThreshold, minimumTemperatureSetting, maximumTemperatureSetting)

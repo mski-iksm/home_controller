@@ -206,3 +206,10 @@ func BuildNewAirconOrderParameters(appliances []appliance.Appliance, device devi
 
 	return newAirconOrderParameters, nil
 }
+
+func GetCurrentTemp(device device.Device) CurrentTempreture {
+	// deviceから今の気温を取得
+	current_tempreture := get_current_temperature(device)
+
+	return current_tempreture
+}
