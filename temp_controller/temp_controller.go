@@ -54,7 +54,7 @@ func getCurrentAirconSettings(appliance appliance.Appliance) CurrentAirConSettin
 	return current_aircon_settings
 }
 
-func get_current_temperature(device device.Device) CurrentTempreture {
+func Get_current_temperature(device device.Device) CurrentTempreture {
 	current_tempreture := CurrentTempreture{
 		Tempreture: device.NewestEvents.Te.Val,
 		UpdatedAt:  ConvertUTCToJST(device.NewestEvents.Te.CreatedAt),
@@ -188,7 +188,7 @@ func BuildNewAirconOrderParameters(appliances []appliance.Appliance, device devi
 	current_aircon_setting := getCurrentAirconSettings(aircon_appliance)
 
 	// deviceから今の気温を取得
-	current_tempreture := get_current_temperature(device)
+	current_tempreture := Get_current_temperature(device)
 
 	// new settingを作る
 	new_aircon_settings, no_settings_change_error := buildNewAirconSettings(current_aircon_setting, current_tempreture, temptureMaxMinSettings)
