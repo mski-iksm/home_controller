@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"os"
 
 	"github.com/mski-iksm/home_controller/runner"
 	"github.com/mski-iksm/home_controller/slack"
@@ -36,7 +37,7 @@ func init() {
 	flag.StringVar(&nature_api_secret, "nature_api_secret", "", "nature remoのAPI")
 
 	flag.StringVar(&action_mode, "action_mode", "send_signal", "send_signal or temp_control")
-	flag.StringVar(&device_name, "device_name", "Remo mini", "device name")
+	flag.StringVar(&device_name, "device_name", "", "device name")
 
 	flag.Float64Var(&tooHotThreshold, "tooHotThreshold", 27.5, "この気温以上になると暑いと判定し、エアコンの設定温度を下げる")
 	flag.Float64Var(&tooColdThreshold, "tooColdThreshold", 24.0, "この気温未満になると暑いと判定し、エアコンの設定温度を上げる")
@@ -50,6 +51,26 @@ func init() {
 
 func main() {
 	flag.Parse()
+
+	// nature_api_secretが空の場合には環境変数から読み込む
+	if nature_api_secret == "" {
+		nature_api_secret = os.Getenv("NATURE_API_SECRET")
+	}
+
+	// device_nameが空の場合には環境変数から読み込む
+	if device_name == "" {
+		device_name = os.Getenv("DEVICE_NAME")
+	}
+
+	// slackTokenが空の場合には環境変数から読み込む
+	if slackToken == "" {
+		slackToken = os.Getenv("SLACK_TOKEN")
+	}
+
+	// slackChannelが空の場合には環境変数から読み込む
+	if slackChannel == "" {
+		slackChannel = os.Getenv("SLACK_CHANNEL")
+	}
 
 	slackObject := slack.SlackObject{
 		SlackToken:   slackToken,
