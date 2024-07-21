@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"os"
+	"strconv"
 
 	"github.com/mski-iksm/home_controller/runner"
 	"github.com/mski-iksm/home_controller/slack"
@@ -35,11 +37,11 @@ var slackChannel string
 func init() {
 	flag.StringVar(&nature_api_secret, "nature_api_secret", "", "nature remoのAPI")
 
-	flag.StringVar(&action_mode, "action_mode", "send_signal", "send_signal or temp_control")
-	flag.StringVar(&device_name, "device_name", "Remo mini", "device name")
+	flag.StringVar(&action_mode, "action_mode", "", "send_signal or temp_control")
+	flag.StringVar(&device_name, "device_name", "", "device name")
 
-	flag.Float64Var(&tooHotThreshold, "tooHotThreshold", 27.5, "この気温以上になると暑いと判定し、エアコンの設定温度を下げる")
-	flag.Float64Var(&tooColdThreshold, "tooColdThreshold", 24.0, "この気温未満になると暑いと判定し、エアコンの設定温度を上げる")
+	flag.Float64Var(&tooHotThreshold, "tooHotThreshold", -1, "この気温以上になると暑いと判定し、エアコンの設定温度を下げる")
+	flag.Float64Var(&tooColdThreshold, "tooColdThreshold", -1, "この気温未満になると暑いと判定し、エアコンの設定温度を上げる")
 	flag.Float64Var(&preparationThreshold, "preparationThreshold", 0.0, "暑すぎる・寒すぎる気温になる前に、エアコンの設定温度を変更する機能。0.0にすると機能しない")
 	flag.Float64Var(&minimumTemperatureSetting, "minimumTemperatureSetting", 23.0, "エアコンの設定可能温度の下限。安全のためこれ以上下げないようにする。")
 	flag.Float64Var(&maximumTemperatureSetting, "maximumTemperatureSetting", 30.0, "エアコンの設定可能温度の上限。安全のためこれ以上上げないようにする。")
@@ -50,6 +52,41 @@ func init() {
 
 func main() {
 	flag.Parse()
+
+	// nature_api_secretが空の場合には環境変数から読み込む
+	if nature_api_secret == "" {
+		nature_api_secret = os.Getenv("NATURE_API_SECRET")
+	}
+
+	// action_modeが空の場合には環境変数から読み込む
+	if action_mode == "" {
+		action_mode = os.Getenv("ACTION_MODE")
+	}
+
+	// device_nameが空の場合には環境変数から読み込む
+	if device_name == "" {
+		device_name = os.Getenv("DEVICE_NAME")
+	}
+
+	// tooHotThresholdが空の場合には環境変数から読み込む
+	if tooHotThreshold < 0 {
+		tooHotThreshold, _ = strconv.ParseFloat(os.Getenv("TOO_HOT_THRESHOLD"), 32)
+	}
+
+	// tooColdThresholdが空の場合には環境変数から読み込む
+	if tooColdThreshold < 0 {
+		tooColdThreshold, _ = strconv.ParseFloat(os.Getenv("TOO_COLD_THRESHOLD"), 32)
+	}
+
+	// slackTokenが空の場合には環境変数から読み込む
+	if slackToken == "" {
+		slackToken = os.Getenv("SLACK_TOKEN")
+	}
+
+	// slackChannelが空の場合には環境変数から読み込む
+	if slackChannel == "" {
+		slackChannel = os.Getenv("SLACK_CHANNEL")
+	}
 
 	slackObject := slack.SlackObject{
 		SlackToken:   slackToken,
