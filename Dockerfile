@@ -13,6 +13,6 @@ COPY signal/ ./signal/
 COPY slack/ ./slack/
 COPY temp_controller/ ./temp_controller/
 
-RUN GOOS=linux GOARCH=amd64 go build -o /home_controller
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /home_controller
 
 CMD ["/home_controller"]
