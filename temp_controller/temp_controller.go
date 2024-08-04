@@ -87,8 +87,8 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 		}, errors.New("No Change")
 	}
 
-	// 前回変更から20分以内なら No Change
-	if currentTimeJST.Sub(current_aircon_setting.UpdatedAt).Minutes() < 20.0 {
+	// 前回変更から15分以内なら No Change
+	if currentTimeJST.Sub(current_aircon_setting.UpdatedAt).Minutes() < 15.0 {
 		return NewAirConSettings{
 			AirconSettings: current_aircon_setting.AirconSettings,
 			PowerOn:        true,
@@ -123,14 +123,14 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 		return new_aircon_setting, no_error
 	}
 
-	// too hot に近づき、かつ1時間以上設定変更されていなければ温度下げる
+	// too hot に近づき、かつ1時間以上設定変更されていなければ一度今の温度を再送信（別リモコンで温度が変更されている可能性があるため）
 	if current_tempreture.Tempreture >= temptureMaxMinSettings.TooHotThreshold-temptureMaxMinSettings.PreparationThreshold && current_aircon_setting.AirconSettings.Temperature > temptureMaxMinSettings.MinimumTemperatureSetting {
 		time_diff := currentTimeJST.Sub(current_aircon_setting.UpdatedAt)
 		if time_diff.Minutes() > 58.0 {
 			new_aircon_setting := NewAirConSettings{
 				AirconSettings: signal.AirconSettings{
 					OperationMode: current_aircon_setting.AirconSettings.OperationMode,
-					Temperature:   current_aircon_setting.AirconSettings.Temperature - 1.0,
+					Temperature:   current_aircon_setting.AirconSettings.Temperature,
 					AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
 					AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
 				},
@@ -140,14 +140,14 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 		}
 	}
 
-	// too cold に近づき、かつ1時間以上設定変更されていなければ温度上げる
+	// too cold に近づき、かつ1時間以上設定変更されていなければ一度今の温度を再送信（別リモコンで温度が変更されている可能性があるため）
 	if current_tempreture.Tempreture <= temptureMaxMinSettings.TooColdThreshold+temptureMaxMinSettings.PreparationThreshold && current_aircon_setting.AirconSettings.Temperature < temptureMaxMinSettings.MaximumTemperatureSetting {
 		time_diff := currentTimeJST.Sub(current_aircon_setting.UpdatedAt)
 		if time_diff.Minutes() > 58.0 {
 			new_aircon_setting := NewAirConSettings{
 				AirconSettings: signal.AirconSettings{
 					OperationMode: current_aircon_setting.AirconSettings.OperationMode,
-					Temperature:   current_aircon_setting.AirconSettings.Temperature + 1.0,
+					Temperature:   current_aircon_setting.AirconSettings.Temperature,
 					AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
 					AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
 				},
