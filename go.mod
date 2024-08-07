@@ -1,6 +1,6 @@
 module github.com/mski-iksm/home_controller
 
-go 1.19
+go 1.22
 
 require github.com/slack-go/slack v0.12.2
 

@@ -88,7 +88,7 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 	}
 
 	// 前回変更から15分以内なら No Change
-	if currentTimeJST.Sub(current_aircon_setting.UpdatedAt).Minutes() < 15.0 {
+	if currentTimeJST.Sub(current_aircon_setting.UpdatedAt).Minutes() < 14.0 {
 		return NewAirConSettings{
 			AirconSettings: current_aircon_setting.AirconSettings,
 			PowerOn:        true,
@@ -96,11 +96,14 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 	}
 
 	// too hot なら温度下げる
-	if current_tempreture.Tempreture >= temptureMaxMinSettings.TooHotThreshold && current_aircon_setting.AirconSettings.Temperature > temptureMaxMinSettings.MinimumTemperatureSetting {
+	if current_tempreture.Tempreture >= temptureMaxMinSettings.TooHotThreshold {
+
+		new_temperature := max(current_aircon_setting.AirconSettings.Temperature-1.0, temptureMaxMinSettings.MinimumTemperatureSetting)
+
 		new_aircon_setting := NewAirConSettings{
 			AirconSettings: signal.AirconSettings{
 				OperationMode: current_aircon_setting.AirconSettings.OperationMode,
-				Temperature:   current_aircon_setting.AirconSettings.Temperature - 1.0,
+				Temperature:   new_temperature,
 				AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
 				AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
 			},
@@ -110,11 +113,14 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 	}
 
 	// too cold なら温度上げる
-	if current_tempreture.Tempreture <= temptureMaxMinSettings.TooColdThreshold && current_aircon_setting.AirconSettings.Temperature < temptureMaxMinSettings.MaximumTemperatureSetting {
+	if current_tempreture.Tempreture <= temptureMaxMinSettings.TooColdThreshold {
+
+		new_temperature := min(current_aircon_setting.AirconSettings.Temperature+1.0, temptureMaxMinSettings.MaximumTemperatureSetting)
+
 		new_aircon_setting := NewAirConSettings{
 			AirconSettings: signal.AirconSettings{
 				OperationMode: current_aircon_setting.AirconSettings.OperationMode,
-				Temperature:   current_aircon_setting.AirconSettings.Temperature + 1.0,
+				Temperature:   new_temperature,
 				AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
 				AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
 			},
@@ -124,13 +130,16 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 	}
 
 	// too hot に近づき、かつ1時間以上設定変更されていなければ一度今の温度を再送信（別リモコンで温度が変更されている可能性があるため）
-	if current_tempreture.Tempreture >= temptureMaxMinSettings.TooHotThreshold-temptureMaxMinSettings.PreparationThreshold && current_aircon_setting.AirconSettings.Temperature > temptureMaxMinSettings.MinimumTemperatureSetting {
+	if current_tempreture.Tempreture >= temptureMaxMinSettings.TooHotThreshold-temptureMaxMinSettings.PreparationThreshold {
 		time_diff := currentTimeJST.Sub(current_aircon_setting.UpdatedAt)
 		if time_diff.Minutes() > 58.0 {
+
+			new_temperature := max(current_aircon_setting.AirconSettings.Temperature-0.5, temptureMaxMinSettings.MinimumTemperatureSetting)
+
 			new_aircon_setting := NewAirConSettings{
 				AirconSettings: signal.AirconSettings{
 					OperationMode: current_aircon_setting.AirconSettings.OperationMode,
-					Temperature:   current_aircon_setting.AirconSettings.Temperature,
+					Temperature:   new_temperature,
 					AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
 					AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
 				},
@@ -141,13 +150,16 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 	}
 
 	// too cold に近づき、かつ1時間以上設定変更されていなければ一度今の温度を再送信（別リモコンで温度が変更されている可能性があるため）
-	if current_tempreture.Tempreture <= temptureMaxMinSettings.TooColdThreshold+temptureMaxMinSettings.PreparationThreshold && current_aircon_setting.AirconSettings.Temperature < temptureMaxMinSettings.MaximumTemperatureSetting {
+	if current_tempreture.Tempreture <= temptureMaxMinSettings.TooColdThreshold+temptureMaxMinSettings.PreparationThreshold {
 		time_diff := currentTimeJST.Sub(current_aircon_setting.UpdatedAt)
 		if time_diff.Minutes() > 58.0 {
+
+			new_temperature := min(current_aircon_setting.AirconSettings.Temperature+0.5, temptureMaxMinSettings.MaximumTemperatureSetting)
+
 			new_aircon_setting := NewAirConSettings{
 				AirconSettings: signal.AirconSettings{
 					OperationMode: current_aircon_setting.AirconSettings.OperationMode,
-					Temperature:   current_aircon_setting.AirconSettings.Temperature,
+					Temperature:   new_temperature,
 					AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
 					AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
 				},
