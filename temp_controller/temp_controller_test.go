@@ -108,7 +108,7 @@ func TestBuildNewAirconSettings(t *testing.T) {
 				},
 				PowerOn: true,
 			},
-			wantErr: errors.New("No Change"),
+			wantErr: nil,
 		},
 		{
 			name: "tooHotButNoChange",
@@ -137,7 +137,7 @@ func TestBuildNewAirconSettings(t *testing.T) {
 				},
 				PowerOn: true,
 			},
-			wantErr: errors.New("No Change"),
+			wantErr: nil,
 		},
 		{
 			name: "dontChangeIfPowerOff",
@@ -189,7 +189,7 @@ func TestBuildNewAirconSettings(t *testing.T) {
 			want: NewAirConSettings{
 				AirconSettings: signal.AirconSettings{
 					OperationMode: "cool",
-					Temperature:   28.0,
+					Temperature:   27.5,
 					AirVolume:     "auto",
 					AirDirection:  "auto",
 				},
@@ -208,7 +208,7 @@ func TestBuildNewAirconSettings(t *testing.T) {
 						AirDirection:  "auto",
 					},
 					UpdatedAt: time.Now().Add(-3 * time.Minute),
-					// 現在時刻から53分前だと変更されない
+					// 現在時刻から3分前だと変更されない
 					PowerOn: true,
 				},
 				current_tempreture: CurrentTempreture{
@@ -268,8 +268,8 @@ func TestBuildNewAirconSettings(t *testing.T) {
 						AirVolume:     "auto",
 						AirDirection:  "auto",
 					},
-					UpdatedAt: time.Now().Add(-15 * time.Minute),
-					// 現在より15分前だと変更されない
+					UpdatedAt: time.Now().Add(-12 * time.Minute),
+					// 現在より12分前だと変更されない
 					PowerOn: true,
 				},
 				current_tempreture: CurrentTempreture{

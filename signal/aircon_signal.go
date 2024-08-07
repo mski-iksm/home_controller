@@ -115,12 +115,12 @@ func PostAirconSignal(api_secret string, aircon_appliance_id string, aircon_sett
 	var fullurl string = "https://api.nature.global/1/appliances/" + aircon_appliance_id + "/aircon_settings"
 
 	post_body := url.Values{}
-	post_body.Set("temperature", strconv.Itoa(int(aircon_settings.Temperature)))
+	post_body.Set("temperature", strconv.FormatFloat(aircon_settings.Temperature, 'f', 1, 64))
 	post_body.Set("operation_mode", aircon_settings.OperationMode)
 	post_body.Set("air_volume", aircon_settings.AirVolume)
 	post_body.Set("air_direction", aircon_settings.AirDirection)
 
-	fmt.Printf("温度: %s\n", strconv.Itoa(int(aircon_settings.Temperature)))
+	fmt.Printf("温度: %s\n", strconv.FormatFloat(aircon_settings.Temperature, 'f', 1, 64))
 	fmt.Printf("モード: %s\n", aircon_settings.OperationMode)
 	fmt.Printf("風量: %s\n", aircon_settings.AirVolume)
 	fmt.Printf("風向: %s\n", aircon_settings.AirDirection)
