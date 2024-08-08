@@ -40,11 +40,11 @@ func init() {
 	flag.StringVar(&action_mode, "action_mode", "", "send_signal or temp_control")
 	flag.StringVar(&device_name, "device_name", "", "device name")
 
-	flag.Float64Var(&tooHotThreshold, "tooHotThreshold", -1, "この気温以上になると暑いと判定し、エアコンの設定温度を下げる")
-	flag.Float64Var(&tooColdThreshold, "tooColdThreshold", -1, "この気温未満になると暑いと判定し、エアコンの設定温度を上げる")
-	flag.Float64Var(&preparationThreshold, "preparationThreshold", 0.0, "暑すぎる・寒すぎる気温になる前に、エアコンの設定温度を変更する機能。0.0にすると機能しない")
-	flag.Float64Var(&minimumTemperatureSetting, "minimumTemperatureSetting", 23.0, "エアコンの設定可能温度の下限。安全のためこれ以上下げないようにする。")
-	flag.Float64Var(&maximumTemperatureSetting, "maximumTemperatureSetting", 30.0, "エアコンの設定可能温度の上限。安全のためこれ以上上げないようにする。")
+	flag.Float64Var(&tooHotThreshold, "tooHotThreshold", -1.0, "この気温以上になると暑いと判定し、エアコンの設定温度を下げる")
+	flag.Float64Var(&tooColdThreshold, "tooColdThreshold", -1.0, "この気温未満になると暑いと判定し、エアコンの設定温度を上げる")
+	flag.Float64Var(&preparationThreshold, "preparationThreshold", -1.0, "暑すぎる・寒すぎる気温になる前に、エアコンの設定温度を変更する機能。0.0にすると機能しない")
+	flag.Float64Var(&minimumTemperatureSetting, "minimumTemperatureSetting", -1.0, "エアコンの設定可能温度の下限。安全のためこれ以上下げないようにする。")
+	flag.Float64Var(&maximumTemperatureSetting, "maximumTemperatureSetting", -1.0, "エアコンの設定可能温度の上限。安全のためこれ以上上げないようにする。")
 
 	flag.StringVar(&slackToken, "slackToken", "", "slackのtoken")
 	flag.StringVar(&slackChannel, "slackChannel", "", "通知を送信するslackのチャンネル名。#から始める。")
@@ -69,13 +69,28 @@ func main() {
 	}
 
 	// tooHotThresholdが空の場合には環境変数から読み込む
-	if tooHotThreshold < 0 {
+	if tooHotThreshold < 0.0 {
 		tooHotThreshold, _ = strconv.ParseFloat(os.Getenv("TOO_HOT_THRESHOLD"), 32)
 	}
 
 	// tooColdThresholdが空の場合には環境変数から読み込む
-	if tooColdThreshold < 0 {
+	if tooColdThreshold < 0.0 {
 		tooColdThreshold, _ = strconv.ParseFloat(os.Getenv("TOO_COLD_THRESHOLD"), 32)
+	}
+
+	// preparationThresholdが空の場合には環境変数から読み込む
+	if preparationThreshold < 0.0 {
+		preparationThreshold, _ = strconv.ParseFloat(os.Getenv("PREPARATION_THRESHOLD"), 32)
+	}
+
+	// minimumTemperatureSettingが空の場合には環境変数から読み込む
+	if minimumTemperatureSetting < 0.0 {
+		minimumTemperatureSetting, _ = strconv.ParseFloat(os.Getenv("MINIMUM_TEMPERATURE_SETTING"), 32)
+	}
+
+	// maximumTemperatureSettingが空の場合には環境変数から読み込む
+	if maximumTemperatureSetting < 0.0 {
+		maximumTemperatureSetting, _ = strconv.ParseFloat(os.Getenv("MAXIMUM_TEMPERATURE_SETTING"), 32)
 	}
 
 	// slackTokenが空の場合には環境変数から読み込む
