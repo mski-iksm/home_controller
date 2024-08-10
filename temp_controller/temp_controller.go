@@ -29,7 +29,7 @@ func ConvertUTCToJST(utcTime time.Time) time.Time {
 	return timeTokyo
 }
 
-func getCurrentAirconSettings(appliance appliance.Appliance) CurrentAirConSettings {
+func GetCurrentAirconSettings(appliance appliance.Appliance) CurrentAirConSettings {
 	tempreture, err := strconv.ParseFloat(appliance.Settings.Temp, 64)
 	if err != nil {
 		fmt.Errorf("温度 %v をfloat64にcastできません", appliance.Settings.Temp)
@@ -176,7 +176,7 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 	}, errors.New("No Change")
 }
 
-func find_aircon_appliance(appliances []appliance.Appliance) (appliance.Appliance, error) {
+func Find_aircon_appliance(appliances []appliance.Appliance) (appliance.Appliance, error) {
 	var no_error error = nil
 
 	for _, appliance := range appliances {
@@ -189,7 +189,7 @@ func find_aircon_appliance(appliances []appliance.Appliance) (appliance.Applianc
 
 func BuildNewAirconOrderParameters(appliances []appliance.Appliance, device device.Device, temptureMaxMinSettings TempretureMaxMinSettings) (AirconOrderParameters, error) {
 	// エアコンを探して appliance を返す
-	aircon_appliance, ac_not_found_err := find_aircon_appliance(appliances)
+	aircon_appliance, ac_not_found_err := Find_aircon_appliance(appliances)
 	if ac_not_found_err != nil {
 		errLog.Printf("エアコンが見つかりませんでした")
 		no_appliance_error := errors.New("No Change")
@@ -197,7 +197,7 @@ func BuildNewAirconOrderParameters(appliances []appliance.Appliance, device devi
 	}
 
 	// 今の設定を取得
-	current_aircon_setting := getCurrentAirconSettings(aircon_appliance)
+	current_aircon_setting := GetCurrentAirconSettings(aircon_appliance)
 
 	// deviceから今の気温を取得
 	current_tempreture := Get_current_temperature(device)
