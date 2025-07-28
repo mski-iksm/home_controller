@@ -98,6 +98,22 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 	// too hot なら温度下げる
 	if current_tempreture.Tempreture >= temptureMaxMinSettings.TooHotThreshold {
 
+		// 前回変更から1時間以上経過しているなら今の温度設定を再送信する（ほかで変更されている可能性があるため）
+		if currentTimeJST.Sub(current_aircon_setting.UpdatedAt).Minutes() > 58.0 {
+			new_temperature := min(current_aircon_setting.AirconSettings.Temperature, temptureMaxMinSettings.MaximumTemperatureSetting)
+
+			new_aircon_setting := NewAirConSettings{
+				AirconSettings: signal.AirconSettings{
+					OperationMode: current_aircon_setting.AirconSettings.OperationMode,
+					Temperature:   new_temperature,
+					AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
+					AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
+				},
+				PowerOn: true,
+			}
+			return new_aircon_setting, no_error
+		}
+
 		new_temperature := max(current_aircon_setting.AirconSettings.Temperature-1.0, temptureMaxMinSettings.MinimumTemperatureSetting)
 
 		new_aircon_setting := NewAirConSettings{
