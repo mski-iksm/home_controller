@@ -60,7 +60,10 @@ func TempControl(nature_api_secret string, device_name string, temptureMaxMinSet
 
 	signal.PostAirconSignal(nature_api_secret, newAirconOrderParameters.ApplianceId, newAirconOrderParameters.AirconSettings)
 
+	// deviceから今の気温を取得
+	current_tempreture := temp_controller.Get_current_temperature(selected_device)
+
 	// slackを送る
-	slackMessage := fmt.Sprintf("エアコンの設定を変更しました。\n設定温度: %v\nモード: %v\n風量: %v\n風向: %v\n", newAirconOrderParameters.AirconSettings.Temperature, newAirconOrderParameters.AirconSettings.OperationMode, newAirconOrderParameters.AirconSettings.AirVolume, newAirconOrderParameters.AirconSettings.AirDirection)
+	slackMessage := fmt.Sprintf("エアコンの設定を変更しました。\n現在温度: %v\n設定温度: %v\nモード: %v\n風量: %v\n風向: %v\n", current_tempreture.Tempreture, newAirconOrderParameters.AirconSettings.Temperature, newAirconOrderParameters.AirconSettings.OperationMode, newAirconOrderParameters.AirconSettings.AirVolume, newAirconOrderParameters.AirconSettings.AirDirection)
 	slackObject.SendSlack(slackMessage)
 }
