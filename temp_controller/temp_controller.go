@@ -95,62 +95,12 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 		}, errors.New("No Change")
 	}
 
-	// too hot なら温度下げる
-	if current_tempreture.Tempreture >= temptureMaxMinSettings.TooHotThreshold {
-
-		// 前回変更から1時間以上経過しているなら今の温度設定を再送信する（ほかで変更されている可能性があるため）
-		if currentTimeJST.Sub(current_aircon_setting.UpdatedAt).Minutes() > 58.0 {
-			new_temperature := min(current_aircon_setting.AirconSettings.Temperature, temptureMaxMinSettings.MaximumTemperatureSetting)
-
-			new_aircon_setting := NewAirConSettings{
-				AirconSettings: signal.AirconSettings{
-					OperationMode: current_aircon_setting.AirconSettings.OperationMode,
-					Temperature:   new_temperature,
-					AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
-					AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
-				},
-				PowerOn: true,
-			}
-			return new_aircon_setting, no_error
-		}
-
-		new_temperature := max(current_aircon_setting.AirconSettings.Temperature-1.0, temptureMaxMinSettings.MinimumTemperatureSetting)
-
-		new_aircon_setting := NewAirConSettings{
-			AirconSettings: signal.AirconSettings{
-				OperationMode: current_aircon_setting.AirconSettings.OperationMode,
-				Temperature:   new_temperature,
-				AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
-				AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
-			},
-			PowerOn: true,
-		}
-		return new_aircon_setting, no_error
-	}
-
-	// too cold なら温度上げる
-	if current_tempreture.Tempreture <= temptureMaxMinSettings.TooColdThreshold {
-
-		new_temperature := min(current_aircon_setting.AirconSettings.Temperature+1.0, temptureMaxMinSettings.MaximumTemperatureSetting)
-
-		new_aircon_setting := NewAirConSettings{
-			AirconSettings: signal.AirconSettings{
-				OperationMode: current_aircon_setting.AirconSettings.OperationMode,
-				Temperature:   new_temperature,
-				AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
-				AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
-			},
-			PowerOn: true,
-		}
-		return new_aircon_setting, no_error
-	}
-
 	// too hot に近づき、かつ1時間以上設定変更されていなければ一度今の温度を再送信（別リモコンで温度が変更されている可能性があるため）
 	if current_tempreture.Tempreture >= temptureMaxMinSettings.TooHotThreshold-temptureMaxMinSettings.PreparationThreshold {
 		time_diff := currentTimeJST.Sub(current_aircon_setting.UpdatedAt)
 		if time_diff.Minutes() > 58.0 {
 
-			new_temperature := max(current_aircon_setting.AirconSettings.Temperature-0.5, temptureMaxMinSettings.MinimumTemperatureSetting)
+			new_temperature := max(current_aircon_setting.AirconSettings.Temperature, temptureMaxMinSettings.MinimumTemperatureSetting)
 
 			new_aircon_setting := NewAirConSettings{
 				AirconSettings: signal.AirconSettings{
@@ -170,7 +120,7 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 		time_diff := currentTimeJST.Sub(current_aircon_setting.UpdatedAt)
 		if time_diff.Minutes() > 58.0 {
 
-			new_temperature := min(current_aircon_setting.AirconSettings.Temperature+0.5, temptureMaxMinSettings.MaximumTemperatureSetting)
+			new_temperature := min(current_aircon_setting.AirconSettings.Temperature, temptureMaxMinSettings.MaximumTemperatureSetting)
 
 			new_aircon_setting := NewAirConSettings{
 				AirconSettings: signal.AirconSettings{
@@ -183,6 +133,40 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 			}
 			return new_aircon_setting, no_error
 		}
+	}
+
+	// too hot なら温度下げる
+	if current_tempreture.Tempreture >= temptureMaxMinSettings.TooHotThreshold {
+
+		new_temperature := max(current_aircon_setting.AirconSettings.Temperature-0.5, temptureMaxMinSettings.MinimumTemperatureSetting)
+
+		new_aircon_setting := NewAirConSettings{
+			AirconSettings: signal.AirconSettings{
+				OperationMode: current_aircon_setting.AirconSettings.OperationMode,
+				Temperature:   new_temperature,
+				AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
+				AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
+			},
+			PowerOn: true,
+		}
+		return new_aircon_setting, no_error
+	}
+
+	// too cold なら温度上げる
+	if current_tempreture.Tempreture <= temptureMaxMinSettings.TooColdThreshold {
+
+		new_temperature := min(current_aircon_setting.AirconSettings.Temperature+0.5, temptureMaxMinSettings.MaximumTemperatureSetting)
+
+		new_aircon_setting := NewAirConSettings{
+			AirconSettings: signal.AirconSettings{
+				OperationMode: current_aircon_setting.AirconSettings.OperationMode,
+				Temperature:   new_temperature,
+				AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
+				AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
+			},
+			PowerOn: true,
+		}
+		return new_aircon_setting, no_error
 	}
 
 	// 特に問題なしなら 現状のまま を返す
