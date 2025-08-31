@@ -34,6 +34,11 @@ var slackChannel string
 
 // =======================
 
+// ntfy設定 =============
+var ntfyUrl string
+
+// =======================
+
 func init() {
 	flag.StringVar(&nature_api_secret, "nature_api_secret", "", "nature remoのAPI")
 
@@ -48,6 +53,8 @@ func init() {
 
 	flag.StringVar(&slackToken, "slackToken", "", "slackのtoken")
 	flag.StringVar(&slackChannel, "slackChannel", "", "通知を送信するslackのチャンネル名。#から始める。")
+
+	flag.StringVar(&ntfyUrl, "ntfyUrl", "error", "ntfyのURL")
 }
 
 func main() {
@@ -114,7 +121,7 @@ func main() {
 	}
 	if action_mode == "temp_control" {
 		temptureMaxMinSettings := temp_controller.ConstructTempretureMaxMinSettings(tooHotThreshold, tooColdThreshold, preparationThreshold, minimumTemperatureSetting, maximumTemperatureSetting)
-		runner.TempControl(nature_api_secret, device_name, *temptureMaxMinSettings, slackObject)
+		runner.TempControl(nature_api_secret, device_name, *temptureMaxMinSettings, slackObject, ntfyUrl)
 		return
 	}
 	if action_mode == "notify_temp" {
