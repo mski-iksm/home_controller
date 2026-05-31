@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/mski-iksm/home_controller/device"
 )
 
 func DecideTemperatureAlert(current_tempreture CurrentTempreture, temptureMaxMinSettings TempretureMaxMinSettings) TemperatureAlert {
@@ -71,18 +69,4 @@ func DecideTemperatureNotification(current_tempreture CurrentTempreture, powerOn
 		ShouldNotify: false,
 		Reason:       "temperature is within alert thresholds",
 	}
-}
-
-func MonitorTempreture(device device.Device, temptureMaxMinSettings TempretureMaxMinSettings, ntfyUrl string) {
-	// deviceから今の気温を取得
-	current_tempreture := Get_current_temperature(device)
-
-	alert := DecideTemperatureAlert(current_tempreture, temptureMaxMinSettings)
-	if alert.Reason == "temperature is too hot" {
-		println("Sending hot alert to ntfy")
-	}
-	if alert.Reason == "temperature is too cold" {
-		println("Sending cold alert to ntfy")
-	}
-	SendTemperatureAlert(ntfyUrl, alert)
 }
