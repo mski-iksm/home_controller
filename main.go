@@ -121,8 +121,8 @@ func main() {
 		return
 	}
 	if action_mode == "notify_temp" {
-		temptureMaxMinSettings := temp_controller.ConstructTempretureMaxMinSettings(tooHotThreshold, tooColdThreshold, preparationThreshold, minimumTemperatureSetting, maximumTemperatureSetting)
-		runner.NotifyTemp(nature_api_secret, device_name, *temptureMaxMinSettings, slackObject)
+		temperatureNotifySettings := temp_controller.ConstructTemperatureNotifySettings(tooHotThreshold, tooColdThreshold)
+		runner.NotifyTemp(nature_api_secret, device_name, *temperatureNotifySettings, slackObject)
 		return
 	}
 }
