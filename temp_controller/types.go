@@ -19,6 +19,20 @@ type NewAirConSettings struct {
 	PowerOn        bool
 }
 
+type AirconAction string
+
+const (
+	AirconActionNoChange      AirconAction = "no_change"
+	AirconActionChangeSetting AirconAction = "change_setting"
+	AirconActionResendSetting AirconAction = "resend_setting"
+)
+
+type AirconDecision struct {
+	Action   AirconAction
+	Settings signal.AirconSettings
+	Reason   string
+}
+
 type CurrentTempreture struct {
 	Tempreture float64
 	UpdatedAt  time.Time
