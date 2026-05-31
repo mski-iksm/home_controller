@@ -42,7 +42,7 @@ var ntfyUrl string
 func init() {
 	flag.StringVar(&nature_api_secret, "nature_api_secret", "", "nature remoのAPI")
 
-	flag.StringVar(&action_mode, "action_mode", "", "send_signal or temp_control")
+	flag.StringVar(&action_mode, "action_mode", "", "temp_control or notify_temp")
 	flag.StringVar(&device_name, "device_name", "", "device name")
 
 	flag.Float64Var(&tooHotThreshold, "tooHotThreshold", -1.0, "この気温以上になると暑いと判定し、エアコンの設定温度を下げる")
@@ -115,10 +115,6 @@ func main() {
 		SlackChannel: slackChannel,
 	}
 
-	if action_mode == "send_signal" {
-		runner.Send_signal(nature_api_secret)
-		return
-	}
 	if action_mode == "temp_control" {
 		temptureMaxMinSettings := temp_controller.ConstructTempretureMaxMinSettings(tooHotThreshold, tooColdThreshold, preparationThreshold, minimumTemperatureSetting, maximumTemperatureSetting)
 		runner.TempControl(nature_api_secret, device_name, *temptureMaxMinSettings, slackObject, ntfyUrl)
