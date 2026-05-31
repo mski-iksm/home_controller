@@ -39,19 +39,11 @@ func NotifyTemp(nature_api_secret string, device_name string, temperatureNotifyS
 	current_aircon_setting := temp_controller.GetCurrentAirconSettings(aircon_appliance)
 
 	// エアコンの電源が入っていない場合は何もしない
-	if !current_aircon_setting.PowerOn {
+	current_tempreture := temp_controller.Get_current_temperature(selected_device)
+	temperatureNotification := temp_controller.DecideTemperatureNotification(current_tempreture, current_aircon_setting.PowerOn, temperatureNotifySettings)
+	if !temperatureNotification.ShouldNotify {
 		return
 	}
 
-	current_tempreture := temp_controller.Get_current_temperature(selected_device)
-
-	// slackを送る
-	if current_tempreture.Tempreture >= temperatureNotifySettings.TooHotThreshold {
-		slackMessage := fmt.Sprintf("気温が暑いです。現在の気温: %v\n", current_tempreture.Tempreture)
-		slackObject.SendSlack(slackMessage)
-	}
-	if current_tempreture.Tempreture < temperatureNotifySettings.TooColdThreshold {
-		slackMessage := fmt.Sprintf("気温が寒いです。現在の気温: %v\n", current_tempreture.Tempreture)
-		slackObject.SendSlack(slackMessage)
-	}
+	slackObject.SendSlack(temperatureNotification.Message)
 }
