@@ -1,8 +1,6 @@
 package service
 
 import (
-	"github.com/mski-iksm/home_controller/appliance"
-	"github.com/mski-iksm/home_controller/device"
 	"github.com/mski-iksm/home_controller/temp_controller"
 )
 
@@ -33,31 +31,19 @@ func NewNotifyTempService(natureAPISecret string, ntfyURL string) NotifyTempServ
 func (s NotifyTempService) Run(request NotifyTempRequest) (NotifyTempResult, error) {
 	var result NotifyTempResult
 
-	devices := s.NatureClient.GetDevices()
-	appliances := s.NatureClient.GetAppliances()
-
-	selectedDevice, err := device.SelectDevice(devices, request.DeviceName)
+	airconContext, err := LoadAirconContext(s.NatureClient, request.DeviceName)
 	if err != nil {
 		return result, err
 	}
 
-	filteredAppliances := appliance.FilterAppliances(appliances, request.DeviceName)
+	result.CurrentTemperature = airconContext.CurrentTemperature
 
-	airconAppliance, err := temp_controller.Find_aircon_appliance(filteredAppliances)
-	if err != nil {
-		return result, err
-	}
-
-	currentAirconSetting := temp_controller.GetCurrentAirconSettings(airconAppliance)
-	currentTemperature := temp_controller.Get_current_temperature(selectedDevice)
-	result.CurrentTemperature = currentTemperature
-
-	if !currentAirconSetting.PowerOn {
+	if !airconContext.CurrentAirconSettings.PowerOn {
 		return result, nil
 	}
 
 	temperatureAlert := temp_controller.DecideTemperatureAlert(
-		currentTemperature,
+		airconContext.CurrentTemperature,
 		temp_controller.TempretureMaxMinSettings{
 			TooHotThreshold:  request.Settings.TooHotThreshold,
 			TooColdThreshold: request.Settings.TooColdThreshold,
