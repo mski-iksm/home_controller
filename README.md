@@ -18,14 +18,16 @@
 3. API キーを環境変数に設定します。
 
 ```bash
-export NATURE_REMO_SECRET="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+export NATURE_API_SECRET="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
 ### `temp_control` モード
 
+室温と現在のエアコン設定を見て、設定温度を自動調整します。設定を変更したときは Slack に結果を通知し、しきい値を大きく外れた場合は補助的に `ntfy` に緊急通知します。
+
 ```bash
 go run main.go \
-  -nature_api_secret="${NATURE_REMO_SECRET}" \
+  -nature_api_secret="${NATURE_API_SECRET}" \
   -action_mode="temp_control" \
   -device_name="Remo" \
   -tooHotThreshold=27.5 \
@@ -34,14 +36,17 @@ go run main.go \
   -minimumTemperatureSetting=22.0 \
   -maximumTemperatureSetting=30.0 \
   -slackToken="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
-  -slackChannel="#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  -slackChannel="#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
+  -ntfyUrl="https://ntfy.sh/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
 ### `notify_temp` モード
 
+エアコンが ON のときだけ、しきい値を超えた室温を Slack に通知します。
+
 ```bash
 go run main.go \
-  -nature_api_secret="${NATURE_REMO_SECRET}" \
+  -nature_api_secret="${NATURE_API_SECRET}" \
   -action_mode="notify_temp" \
   -device_name="Remo" \
   -tooHotThreshold=27.5 \
