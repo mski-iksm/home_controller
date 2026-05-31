@@ -44,7 +44,7 @@ func TestBuildNewAirconSettings(t *testing.T) {
 			want: NewAirConSettings{
 				AirconSettings: signal.AirconSettings{
 					OperationMode: "cool",
-					Temperature:   26.0,
+					Temperature:   26.5,
 					AirVolume:     "auto",
 					AirDirection:  "auto",
 				},
@@ -73,7 +73,7 @@ func TestBuildNewAirconSettings(t *testing.T) {
 			want: NewAirConSettings{
 				AirconSettings: signal.AirconSettings{
 					OperationMode: "cool",
-					Temperature:   28.0,
+					Temperature:   27.5,
 					AirVolume:     "auto",
 					AirDirection:  "auto",
 				},
@@ -189,7 +189,7 @@ func TestBuildNewAirconSettings(t *testing.T) {
 			want: NewAirConSettings{
 				AirconSettings: signal.AirconSettings{
 					OperationMode: "cool",
-					Temperature:   27.5,
+					Temperature:   27.0,
 					AirVolume:     "auto",
 					AirDirection:  "auto",
 				},
@@ -362,7 +362,7 @@ func TestBuildNewAirconOrderParameters(t *testing.T) {
 				ApplianceId: "1",
 				AirconSettings: signal.AirconSettings{
 					OperationMode: "cool",
-					Temperature:   26.0,
+					Temperature:   26.5,
 					AirVolume:     "auto",
 					AirDirection:  "auto",
 				},
