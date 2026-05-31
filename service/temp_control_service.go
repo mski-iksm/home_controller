@@ -11,11 +11,8 @@ import (
 )
 
 type TempControlRequest struct {
-	NatureAPISecret string
-	DeviceName      string
-	Settings        temp_controller.TempretureMaxMinSettings
-	SlackObject     slack.SlackObject
-	NtfyURL         string
+	DeviceName string
+	Settings   temp_controller.TempretureMaxMinSettings
 }
 
 type TempControlResult struct {
@@ -25,17 +22,65 @@ type TempControlResult struct {
 	TemperatureAlert   temp_controller.TemperatureAlert
 }
 
-type TempControlService struct{}
+type NatureClient interface {
+	GetDevices() []device.Device
+	GetAppliances() []appliance.Appliance
+	PostAirconSignal(applianceID string, settings signal.AirconSettings) int
+}
 
-func NewTempControlService() TempControlService {
-	return TempControlService{}
+type SlackNotifier interface {
+	SendSlack(message string)
+}
+
+type TemperatureAlertNotifier interface {
+	SendTemperatureAlert(alert temp_controller.TemperatureAlert)
+}
+
+type NatureRemoClient struct {
+	APISecret string
+}
+
+func (c NatureRemoClient) GetDevices() []device.Device {
+	return device.Get_devices(c.APISecret)
+}
+
+func (c NatureRemoClient) GetAppliances() []appliance.Appliance {
+	return appliance.Build_appliances(c.APISecret)
+}
+
+func (c NatureRemoClient) PostAirconSignal(applianceID string, settings signal.AirconSettings) int {
+	return signal.PostAirconSignal(c.APISecret, applianceID, settings)
+}
+
+type NtfyNotifier struct {
+	URL string
+}
+
+func (n NtfyNotifier) SendTemperatureAlert(alert temp_controller.TemperatureAlert) {
+	temp_controller.SendTemperatureAlert(n.URL, alert)
+}
+
+type TempControlService struct {
+	NatureClient             NatureClient
+	SlackNotifier            SlackNotifier
+	TemperatureAlertNotifier TemperatureAlertNotifier
+}
+
+func NewTempControlService(natureAPISecret string, slackObject slack.SlackObject, ntfyURL string) TempControlService {
+	return TempControlService{
+		NatureClient: NatureRemoClient{
+			APISecret: natureAPISecret,
+		},
+		SlackNotifier:            &slackObject,
+		TemperatureAlertNotifier: NtfyNotifier{URL: ntfyURL},
+	}
 }
 
 func (s TempControlService) Run(request TempControlRequest) (TempControlResult, error) {
 	var result TempControlResult
 
-	devices := device.Get_devices(request.NatureAPISecret)
-	appliances := appliance.Build_appliances(request.NatureAPISecret)
+	devices := s.NatureClient.GetDevices()
+	appliances := s.NatureClient.GetAppliances()
 
 	selectedDevice, err := device.SelectDevice(devices, request.DeviceName)
 	if err != nil {
@@ -49,14 +94,14 @@ func (s TempControlService) Run(request TempControlRequest) (TempControlResult, 
 
 	temperatureAlert := temp_controller.DecideTemperatureAlert(currentTemperature, request.Settings)
 	result.TemperatureAlert = temperatureAlert
-	temp_controller.SendTemperatureAlert(request.NtfyURL, temperatureAlert)
+	s.TemperatureAlertNotifier.SendTemperatureAlert(temperatureAlert)
 
 	newAirconOrderParameters, err := temp_controller.BuildNewAirconOrderParameters(filteredAppliances, selectedDevice, request.Settings)
 	if err != nil {
 		return result, err
 	}
 
-	signal.PostAirconSignal(request.NatureAPISecret, newAirconOrderParameters.ApplianceId, newAirconOrderParameters.AirconSettings)
+	s.NatureClient.PostAirconSignal(newAirconOrderParameters.ApplianceId, newAirconOrderParameters.AirconSettings)
 
 	result.AirconSettings = newAirconOrderParameters.AirconSettings
 	result.AirconChanged = true
@@ -69,8 +114,7 @@ func (s TempControlService) Run(request TempControlRequest) (TempControlResult, 
 		newAirconOrderParameters.AirconSettings.AirVolume,
 		newAirconOrderParameters.AirconSettings.AirDirection,
 	)
-	slackObject := request.SlackObject
-	slackObject.SendSlack(slackMessage)
+	s.SlackNotifier.SendSlack(slackMessage)
 
 	return result, nil
 }
