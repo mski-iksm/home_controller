@@ -40,6 +40,12 @@ type TemperatureAlert struct {
 	Reason       string
 }
 
+type TemperatureNotification struct {
+	ShouldNotify bool
+	Message      string
+	Reason       string
+}
+
 type CurrentTempreture struct {
 	Tempreture float64
 	UpdatedAt  time.Time
