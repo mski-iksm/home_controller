@@ -79,24 +79,18 @@ func NewTempControlService(natureAPISecret string, slackObject slack.SlackObject
 func (s TempControlService) Run(request TempControlRequest) (TempControlResult, error) {
 	var result TempControlResult
 
-	devices := s.NatureClient.GetDevices()
-	appliances := s.NatureClient.GetAppliances()
-
-	selectedDevice, err := device.SelectDevice(devices, request.DeviceName)
+	applianceContext, err := LoadApplianceContext(s.NatureClient, request.DeviceName)
 	if err != nil {
 		return result, err
 	}
 
-	filteredAppliances := appliance.FilterAppliances(appliances, request.DeviceName)
+	result.CurrentTemperature = applianceContext.CurrentTemperature
 
-	currentTemperature := temp_controller.Get_current_temperature(selectedDevice)
-	result.CurrentTemperature = currentTemperature
-
-	temperatureAlert := temp_controller.DecideTemperatureAlert(currentTemperature, request.Settings)
+	temperatureAlert := temp_controller.DecideTemperatureAlert(applianceContext.CurrentTemperature, request.Settings)
 	result.TemperatureAlert = temperatureAlert
 	s.TemperatureAlertNotifier.SendTemperatureAlert(temperatureAlert)
 
-	newAirconOrderParameters, err := temp_controller.BuildNewAirconOrderParameters(filteredAppliances, selectedDevice, request.Settings)
+	newAirconOrderParameters, err := temp_controller.BuildNewAirconOrderParameters(applianceContext.FilteredAppliances, applianceContext.Device, request.Settings)
 	if err != nil {
 		return result, err
 	}
@@ -108,7 +102,7 @@ func (s TempControlService) Run(request TempControlRequest) (TempControlResult, 
 
 	slackMessage := fmt.Sprintf(
 		"エアコンの設定を変更しました。\n現在温度: %v\n設定温度: %v\nモード: %v\n風量: %v\n風向: %v\n",
-		currentTemperature.Tempreture,
+		applianceContext.CurrentTemperature.Tempreture,
 		newAirconOrderParameters.AirconSettings.Temperature,
 		newAirconOrderParameters.AirconSettings.OperationMode,
 		newAirconOrderParameters.AirconSettings.AirVolume,
