@@ -66,33 +66,34 @@ func Get_current_temperature(device device.Device) CurrentTempreture {
 	return current_tempreture
 }
 
-// 新settingを作る
-func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, current_tempreture CurrentTempreture, temptureMaxMinSettings TempretureMaxMinSettings) (NewAirConSettings, error) {
-	var no_error error = nil
-	currentTimeJST := ConvertUTCToJST(time.Now())
+func DecideAirconControl(current_aircon_setting CurrentAirConSettings, current_tempreture CurrentTempreture, temptureMaxMinSettings TempretureMaxMinSettings, now time.Time) AirconDecision {
+	currentTimeJST := ConvertUTCToJST(now)
 
 	// 電源がオフなら No Change
 	if !current_aircon_setting.PowerOn {
-		return NewAirConSettings{
-			AirconSettings: current_aircon_setting.AirconSettings,
-			PowerOn:        false,
-		}, errors.New("No Change")
+		return AirconDecision{
+			Action:   AirconActionNoChange,
+			Settings: current_aircon_setting.AirconSettings,
+			Reason:   "power is off",
+		}
 	}
 
 	// 気温を測定した時刻が前回の変更から10分以内なら No Change
 	if current_tempreture.UpdatedAt.Sub(current_aircon_setting.UpdatedAt).Minutes() < 10.0 {
-		return NewAirConSettings{
-			AirconSettings: current_aircon_setting.AirconSettings,
-			PowerOn:        true,
-		}, errors.New("No Change")
+		return AirconDecision{
+			Action:   AirconActionNoChange,
+			Settings: current_aircon_setting.AirconSettings,
+			Reason:   "temperature measurement is too close to the last aircon update",
+		}
 	}
 
 	// 前回変更から15分以内なら No Change
 	if currentTimeJST.Sub(current_aircon_setting.UpdatedAt).Minutes() < 14.0 {
-		return NewAirConSettings{
-			AirconSettings: current_aircon_setting.AirconSettings,
-			PowerOn:        true,
-		}, errors.New("No Change")
+		return AirconDecision{
+			Action:   AirconActionNoChange,
+			Settings: current_aircon_setting.AirconSettings,
+			Reason:   "last aircon update is too recent",
+		}
 	}
 
 	// too hot なら温度下げる
@@ -100,16 +101,16 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 
 		new_temperature := max(current_aircon_setting.AirconSettings.Temperature-0.5, temptureMaxMinSettings.MinimumTemperatureSetting)
 
-		new_aircon_setting := NewAirConSettings{
-			AirconSettings: signal.AirconSettings{
+		return AirconDecision{
+			Action: AirconActionChangeSetting,
+			Settings: signal.AirconSettings{
 				OperationMode: current_aircon_setting.AirconSettings.OperationMode,
 				Temperature:   new_temperature,
 				AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
 				AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
 			},
-			PowerOn: true,
+			Reason: "temperature is too hot",
 		}
-		return new_aircon_setting, no_error
 	}
 
 	// too cold なら温度上げる
@@ -117,16 +118,16 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 
 		new_temperature := min(current_aircon_setting.AirconSettings.Temperature+0.5, temptureMaxMinSettings.MaximumTemperatureSetting)
 
-		new_aircon_setting := NewAirConSettings{
-			AirconSettings: signal.AirconSettings{
+		return AirconDecision{
+			Action: AirconActionChangeSetting,
+			Settings: signal.AirconSettings{
 				OperationMode: current_aircon_setting.AirconSettings.OperationMode,
 				Temperature:   new_temperature,
 				AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
 				AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
 			},
-			PowerOn: true,
+			Reason: "temperature is too cold",
 		}
-		return new_aircon_setting, no_error
 	}
 	// 1時間以上設定変更されていなければ一度今の温度を再送信（エアコンの設定が自動で変わる問題が確認されているため）
 	time_diff := currentTimeJST.Sub(current_aircon_setting.UpdatedAt)
@@ -134,23 +135,40 @@ func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, curren
 
 		new_temperature := max(current_aircon_setting.AirconSettings.Temperature, temptureMaxMinSettings.MinimumTemperatureSetting)
 
-		new_aircon_setting := NewAirConSettings{
-			AirconSettings: signal.AirconSettings{
+		return AirconDecision{
+			Action: AirconActionResendSetting,
+			Settings: signal.AirconSettings{
 				OperationMode: current_aircon_setting.AirconSettings.OperationMode,
 				Temperature:   new_temperature,
 				AirVolume:     current_aircon_setting.AirconSettings.AirVolume,
 				AirDirection:  current_aircon_setting.AirconSettings.AirDirection,
 			},
-			PowerOn: true,
+			Reason: "last aircon update is older than resend interval",
 		}
-		return new_aircon_setting, no_error
 	}
 
 	// 特に問題なしなら 現状のまま を返す
+	return AirconDecision{
+		Action:   AirconActionNoChange,
+		Settings: current_aircon_setting.AirconSettings,
+		Reason:   "temperature is within thresholds",
+	}
+}
+
+// 新settingを作る
+func buildNewAirconSettings(current_aircon_setting CurrentAirConSettings, current_tempreture CurrentTempreture, temptureMaxMinSettings TempretureMaxMinSettings) (NewAirConSettings, error) {
+	decision := DecideAirconControl(current_aircon_setting, current_tempreture, temptureMaxMinSettings, time.Now())
+	new_aircon_settings := NewAirConSettings{
+		AirconSettings: decision.Settings,
+		PowerOn:        current_aircon_setting.PowerOn,
+	}
+	if decision.Action == AirconActionNoChange {
+		return new_aircon_settings, errors.New("No Change")
+	}
 	return NewAirConSettings{
-		AirconSettings: current_aircon_setting.AirconSettings,
+		AirconSettings: decision.Settings,
 		PowerOn:        true,
-	}, errors.New("No Change")
+	}, nil
 }
 
 func Find_aircon_appliance(appliances []appliance.Appliance) (appliance.Appliance, error) {

@@ -312,6 +312,89 @@ func TestBuildNewAirconSettings(t *testing.T) {
 	}
 }
 
+func TestDecideAirconControl(t *testing.T) {
+	tokyoTZ, _ := time.LoadLocation("Asia/Tokyo")
+	settings := TempretureMaxMinSettings{
+		TooHotThreshold:           27.5,
+		TooColdThreshold:          24.0,
+		PreparationThreshold:      0.5,
+		MinimumTemperatureSetting: 23.0,
+		MaximumTemperatureSetting: 30.0,
+	}
+	currentAircon := CurrentAirConSettings{
+		AirconSettings: signal.AirconSettings{
+			OperationMode: "cool",
+			Temperature:   27.0,
+			AirVolume:     "auto",
+			AirDirection:  "auto",
+		},
+		UpdatedAt: time.Date(2020, 1, 1, 0, 0, 0, 0, tokyoTZ),
+		PowerOn:   true,
+	}
+
+	tests := []struct {
+		name               string
+		currentAircon      CurrentAirConSettings
+		currentTempreture  CurrentTempreture
+		now                time.Time
+		wantAction         AirconAction
+		wantTemperature    float64
+		wantReasonNotEmpty bool
+	}{
+		{
+			name:          "tooHot",
+			currentAircon: currentAircon,
+			currentTempreture: CurrentTempreture{
+				Tempreture: 30.0,
+				UpdatedAt:  time.Date(2020, 1, 1, 5, 0, 0, 0, tokyoTZ),
+			},
+			now:                time.Date(2020, 1, 1, 6, 0, 0, 0, tokyoTZ),
+			wantAction:         AirconActionChangeSetting,
+			wantTemperature:    26.5,
+			wantReasonNotEmpty: true,
+		},
+		{
+			name:          "resend",
+			currentAircon: currentAircon,
+			currentTempreture: CurrentTempreture{
+				Tempreture: 25.0,
+				UpdatedAt:  time.Date(2020, 1, 1, 5, 0, 0, 0, tokyoTZ),
+			},
+			now:                time.Date(2020, 1, 1, 1, 0, 0, 0, tokyoTZ),
+			wantAction:         AirconActionResendSetting,
+			wantTemperature:    27.0,
+			wantReasonNotEmpty: true,
+		},
+		{
+			name:          "noChange",
+			currentAircon: currentAircon,
+			currentTempreture: CurrentTempreture{
+				Tempreture: 25.0,
+				UpdatedAt:  time.Date(2020, 1, 1, 0, 5, 0, 0, tokyoTZ),
+			},
+			now:                time.Date(2020, 1, 1, 1, 0, 0, 0, tokyoTZ),
+			wantAction:         AirconActionNoChange,
+			wantTemperature:    27.0,
+			wantReasonNotEmpty: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := DecideAirconControl(tt.currentAircon, tt.currentTempreture, settings, tt.now)
+			if got.Action != tt.wantAction {
+				t.Errorf("DecideAirconControl action mismatch. Must be %v, got %v\n", tt.wantAction, got.Action)
+			}
+			if got.Settings.Temperature != tt.wantTemperature {
+				t.Errorf("DecideAirconControl temperature mismatch. Must be %v, got %v\n", tt.wantTemperature, got.Settings.Temperature)
+			}
+			if tt.wantReasonNotEmpty && got.Reason == "" {
+				t.Errorf("DecideAirconControl reason must not be empty")
+			}
+		})
+	}
+}
+
 func TestBuildNewAirconOrderParameters(t *testing.T) {
 	type Args struct {
 		appliances             []appliance.Appliance
