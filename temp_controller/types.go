@@ -33,6 +33,13 @@ type AirconDecision struct {
 	Reason   string
 }
 
+type TemperatureAlert struct {
+	ShouldNotify bool
+	Message      string
+	Priority     string
+	Reason       string
+}
+
 type CurrentTempreture struct {
 	Tempreture float64
 	UpdatedAt  time.Time
