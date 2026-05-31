@@ -53,7 +53,6 @@ func MonitorTempreture(device device.Device, temptureMaxMinSettings TempretureMa
 	}
 	if alert.Reason == "temperature is too cold" {
 		println("Sending cold alert to ntfy")
-		println(ntfyUrl)
 	}
 	SendTemperatureAlert(ntfyUrl, alert)
 }
