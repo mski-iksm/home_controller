@@ -122,7 +122,7 @@ func main() {
 	}
 	if action_mode == "notify_temp" {
 		temperatureNotifySettings := temp_controller.ConstructTemperatureNotifySettings(tooHotThreshold, tooColdThreshold)
-		runner.NotifyTemp(nature_api_secret, device_name, *temperatureNotifySettings, slackObject)
+		runner.NotifyTemp(nature_api_secret, device_name, *temperatureNotifySettings, ntfyUrl)
 		return
 	}
 }

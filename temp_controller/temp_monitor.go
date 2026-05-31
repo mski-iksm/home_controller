@@ -40,33 +40,3 @@ func SendTemperatureAlert(ntfyUrl string, alert TemperatureAlert) {
 	req.Header.Set("Priority", alert.Priority)
 	http.DefaultClient.Do(req)
 }
-
-func DecideTemperatureNotification(current_tempreture CurrentTempreture, powerOn bool, temperatureNotifySettings TemperatureNotifySettings) TemperatureNotification {
-	if !powerOn {
-		return TemperatureNotification{
-			ShouldNotify: false,
-			Reason:       "power is off",
-		}
-	}
-
-	if current_tempreture.Tempreture >= temperatureNotifySettings.TooHotThreshold {
-		return TemperatureNotification{
-			ShouldNotify: true,
-			Message:      "気温が暑いです。現在の気温: " + fmt.Sprintf("%.1f", current_tempreture.Tempreture),
-			Reason:       "temperature is too hot",
-		}
-	}
-
-	if current_tempreture.Tempreture < temperatureNotifySettings.TooColdThreshold {
-		return TemperatureNotification{
-			ShouldNotify: true,
-			Message:      "気温が寒いです。現在の気温: " + fmt.Sprintf("%.1f", current_tempreture.Tempreture),
-			Reason:       "temperature is too cold",
-		}
-	}
-
-	return TemperatureNotification{
-		ShouldNotify: false,
-		Reason:       "temperature is within alert thresholds",
-	}
-}

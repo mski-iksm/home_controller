@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/mski-iksm/home_controller/appliance"
 	"github.com/mski-iksm/home_controller/device"
-	"github.com/mski-iksm/home_controller/slack"
 	"github.com/mski-iksm/home_controller/temp_controller"
 )
 
@@ -13,21 +12,21 @@ type NotifyTempRequest struct {
 }
 
 type NotifyTempResult struct {
-	CurrentTemperature      temp_controller.CurrentTempreture
-	TemperatureNotification temp_controller.TemperatureNotification
+	CurrentTemperature temp_controller.CurrentTempreture
+	TemperatureAlert   temp_controller.TemperatureAlert
 }
 
 type NotifyTempService struct {
-	NatureClient  NatureClient
-	SlackNotifier SlackNotifier
+	NatureClient             NatureClient
+	TemperatureAlertNotifier TemperatureAlertNotifier
 }
 
-func NewNotifyTempService(natureAPISecret string, slackObject slack.SlackObject) NotifyTempService {
+func NewNotifyTempService(natureAPISecret string, ntfyURL string) NotifyTempService {
 	return NotifyTempService{
 		NatureClient: NatureRemoClient{
 			APISecret: natureAPISecret,
 		},
-		SlackNotifier: &slackObject,
+		TemperatureAlertNotifier: NtfyNotifier{URL: ntfyURL},
 	}
 }
 
@@ -46,7 +45,6 @@ func (s NotifyTempService) Run(request NotifyTempRequest) (NotifyTempResult, err
 
 	airconAppliance, err := temp_controller.Find_aircon_appliance(filteredAppliances)
 	if err != nil {
-		s.SlackNotifier.SendSlack("エアコンが見つかりませんでした")
 		return result, err
 	}
 
@@ -54,17 +52,19 @@ func (s NotifyTempService) Run(request NotifyTempRequest) (NotifyTempResult, err
 	currentTemperature := temp_controller.Get_current_temperature(selectedDevice)
 	result.CurrentTemperature = currentTemperature
 
-	temperatureNotification := temp_controller.DecideTemperatureNotification(
-		currentTemperature,
-		currentAirconSetting.PowerOn,
-		request.Settings,
-	)
-	result.TemperatureNotification = temperatureNotification
-
-	if !temperatureNotification.ShouldNotify {
+	if !currentAirconSetting.PowerOn {
 		return result, nil
 	}
 
-	s.SlackNotifier.SendSlack(temperatureNotification.Message)
+	temperatureAlert := temp_controller.DecideTemperatureAlert(
+		currentTemperature,
+		temp_controller.TempretureMaxMinSettings{
+			TooHotThreshold:  request.Settings.TooHotThreshold,
+			TooColdThreshold: request.Settings.TooColdThreshold,
+		},
+	)
+	result.TemperatureAlert = temperatureAlert
+
+	s.TemperatureAlertNotifier.SendTemperatureAlert(temperatureAlert)
 	return result, nil
 }

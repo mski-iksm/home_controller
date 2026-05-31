@@ -5,7 +5,7 @@
 ## モード
 
 - `temp_control`: 室温が規定の範囲内になるようにエアコンの設定温度を自動変更する
-- `notify_temp`: 室温が閾値を超えたときに Slack 通知する
+- `notify_temp`: 室温がしきい値を大きく外れたときに `ntfy` へ通知する
 
 ## 使い方
 
@@ -42,7 +42,7 @@ go run main.go \
 
 ### `notify_temp` モード
 
-エアコンが ON のときだけ、しきい値を超えた室温を Slack に通知します。
+エアコンが ON のときだけ、`temp_control` と同じ基準で、しきい値を大きく外れた室温を `ntfy` に通知します。
 
 ```bash
 go run main.go \
@@ -51,6 +51,5 @@ go run main.go \
   -device_name="Remo" \
   -tooHotThreshold=27.5 \
   -tooColdThreshold=24.5 \
-  -slackToken="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
-  -slackChannel="#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  -ntfyUrl="https://ntfy.sh/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```

@@ -9,7 +9,7 @@ import (
 	"github.com/mski-iksm/home_controller/temp_controller"
 )
 
-func TestNotifyTempService_Run_SendsSlackForHotTemperature(t *testing.T) {
+func TestNotifyTempService_Run_SendsAlertForHotTemperature(t *testing.T) {
 	tokyo, _ := time.LoadLocation("Asia/Tokyo")
 	currentTime := time.Date(2020, 1, 1, 5, 0, 0, 0, tokyo)
 
@@ -54,11 +54,11 @@ func TestNotifyTempService_Run_SendsSlackForHotTemperature(t *testing.T) {
 			},
 		},
 	}
-	fakeSlack := &fakeSlackNotifier{}
+	fakeAlert := &fakeAlertNotifier{}
 
 	service := NotifyTempService{
-		NatureClient:  fakeClient,
-		SlackNotifier: fakeSlack,
+		NatureClient:             fakeClient,
+		TemperatureAlertNotifier: fakeAlert,
 	}
 
 	result, err := service.Run(NotifyTempRequest{
@@ -72,18 +72,21 @@ func TestNotifyTempService_Run_SendsSlackForHotTemperature(t *testing.T) {
 		t.Fatalf("Run returned error: %v", err)
 	}
 
-	if len(fakeSlack.messages) != 1 {
-		t.Fatalf("expected one slack message, got %d", len(fakeSlack.messages))
+	if len(fakeAlert.alerts) != 1 {
+		t.Fatalf("expected one alert, got %d", len(fakeAlert.alerts))
 	}
-	if !result.TemperatureNotification.ShouldNotify {
-		t.Fatalf("expected notification result")
+	if !result.TemperatureAlert.ShouldNotify {
+		t.Fatalf("expected alert result")
 	}
-	if result.TemperatureNotification.Reason != "temperature is too hot" {
-		t.Fatalf("unexpected reason: %s", result.TemperatureNotification.Reason)
+	if !fakeAlert.alerts[0].ShouldNotify {
+		t.Fatalf("expected sent alert to require notification")
+	}
+	if result.TemperatureAlert.Reason != "temperature is too hot" {
+		t.Fatalf("unexpected reason: %s", result.TemperatureAlert.Reason)
 	}
 }
 
-func TestNotifyTempService_Run_SkipsSlackWhenWithinThreshold(t *testing.T) {
+func TestNotifyTempService_Run_SkipsAlertWhenWithinThreshold(t *testing.T) {
 	tokyo, _ := time.LoadLocation("Asia/Tokyo")
 	currentTime := time.Date(2020, 1, 1, 5, 0, 0, 0, tokyo)
 
@@ -128,11 +131,11 @@ func TestNotifyTempService_Run_SkipsSlackWhenWithinThreshold(t *testing.T) {
 			},
 		},
 	}
-	fakeSlack := &fakeSlackNotifier{}
+	fakeAlert := &fakeAlertNotifier{}
 
 	service := NotifyTempService{
-		NatureClient:  fakeClient,
-		SlackNotifier: fakeSlack,
+		NatureClient:             fakeClient,
+		TemperatureAlertNotifier: fakeAlert,
 	}
 
 	result, err := service.Run(NotifyTempRequest{
@@ -146,10 +149,13 @@ func TestNotifyTempService_Run_SkipsSlackWhenWithinThreshold(t *testing.T) {
 		t.Fatalf("Run returned error: %v", err)
 	}
 
-	if len(fakeSlack.messages) != 0 {
-		t.Fatalf("expected no slack messages, got %d", len(fakeSlack.messages))
+	if len(fakeAlert.alerts) != 1 {
+		t.Fatalf("expected notifier to be called once, got %d", len(fakeAlert.alerts))
 	}
-	if result.TemperatureNotification.ShouldNotify {
-		t.Fatalf("expected no notification result")
+	if result.TemperatureAlert.ShouldNotify {
+		t.Fatalf("expected no alert result")
+	}
+	if fakeAlert.alerts[0].ShouldNotify {
+		t.Fatalf("expected sent alert to be a no-op alert")
 	}
 }
