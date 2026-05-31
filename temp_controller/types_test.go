@@ -93,3 +93,14 @@ func TestAssertTresholdSettings(t *testing.T) {
 		})
 	}
 }
+
+func TestConstructTemperatureNotifySettings(t *testing.T) {
+	got := ConstructTemperatureNotifySettings(27.5, 24.0)
+
+	if got.TooHotThreshold != 27.5 {
+		t.Fatalf("TooHotThreshold mismatch. want %v, got %v", 27.5, got.TooHotThreshold)
+	}
+	if got.TooColdThreshold != 24.0 {
+		t.Fatalf("TooColdThreshold mismatch. want %v, got %v", 24.0, got.TooColdThreshold)
+	}
+}

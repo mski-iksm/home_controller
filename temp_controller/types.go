@@ -58,6 +58,11 @@ type TempretureMaxMinSettings struct {
 	MaximumTemperatureSetting float64
 }
 
+type TemperatureNotifySettings struct {
+	TooHotThreshold  float64
+	TooColdThreshold float64
+}
+
 var TOO_HOT_THRESHOLD_HARD_LIMIT float64 = 30.0
 var TOO_COLD_THRESHOLD_HARD_LIMIT float64 = 12.0
 var PREPARATION_THRESHOLD_HARD_LIMIT float64 = 0.0
@@ -97,4 +102,11 @@ func ConstructTempretureMaxMinSettings(tooHotThreshold float64, tooColdThreshold
 		os.Exit(1)
 	}
 	return &tempretureMaxMinSettings
+}
+
+func ConstructTemperatureNotifySettings(tooHotThreshold float64, tooColdThreshold float64) *TemperatureNotifySettings {
+	return &TemperatureNotifySettings{
+		TooHotThreshold:  tooHotThreshold,
+		TooColdThreshold: tooColdThreshold,
+	}
 }

@@ -46,9 +46,6 @@ go run main.go \
   -device_name="Remo" \
   -tooHotThreshold=27.5 \
   -tooColdThreshold=24.5 \
-  -preparationThreshold=0.5 \
-  -minimumTemperatureSetting=22.0 \
-  -maximumTemperatureSetting=30.0 \
   -slackToken="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
   -slackChannel="#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
